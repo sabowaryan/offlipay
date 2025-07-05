@@ -7,7 +7,7 @@
     "expo-secure-store": false
   },
   "scripts": {
-    "dev": "EXPO_NO_TELEMETRY=1 expo start",
+    "dev": "expo start",
     "build:web": "expo export --platform web",
     "lint": "expo lint"
   },
