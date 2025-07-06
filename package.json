@@ -19,7 +19,7 @@
     "@lucide/lab": "^0.1.2",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
-    "@sentry/react-native": "^6.16.1",
+    "@sentry/react-native": "^6.14.0",
     "expo": "^53.0.17",
     "expo-audio": "^0.4.8",
     "expo-background-task": "^0.2.8",

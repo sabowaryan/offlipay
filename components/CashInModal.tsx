@@ -17,13 +17,13 @@ import {
   Copy,
   Eye,
   EyeOff,
-  User,
+  User as UserIcon,
   CreditCard,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TYPO } from '@/utils/typography';
-import { CashInMethod, Agent, Voucher, BankAccount, CashInTransaction } from '@/types';
+import { CashInMethod, Agent, Voucher, BankAccount, CashInTransaction, User } from '@/types';
 import { StorageService } from '@/utils/storage';
 import { WalletService } from '@/services/WalletService';
 import QRScanner from './QRScanner';
@@ -67,6 +67,7 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
   const [selectedBankAccount, setSelectedBankAccount] = useState<BankAccount | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [balanceVisible, setBalanceVisible] = useState(true);
+  const [user, setUser] = useState<User | null>(WalletService.getCurrentUser());
 
   // États des données
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -78,7 +79,6 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
   } | undefined>(undefined);
 
   const isTablet = windowWidth > 768;
-  const user = WalletService.getCurrentUser();
 
   // Hooks personnalisés
   const validation = useCashInValidation({
@@ -93,6 +93,8 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
 
   useEffect(() => {
     if (visible) {
+      // Mettre à jour l'utilisateur quand le modal s'ouvre
+      setUser(WalletService.getCurrentUser());
       loadData();
     }
   }, [visible]);
@@ -374,7 +376,7 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
         {/* Sélection spécifique selon la méthode */}
         {selectedMethod === 'agent' && (
           <SectionCard
-            icon={User}
+            icon={UserIcon}
             iconColor={COLORS.ERROR}
             title="Sélectionner un agent"
           >

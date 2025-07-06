@@ -32,7 +32,7 @@ export default function ModalContainer({
   subtitle,
   children,
   showCloseButton = true,
-  maxHeight = screenHeight * 0.8,
+  maxHeight = screenHeight * 0.9,
 }: ModalContainerProps) {
   const { colors: COLORS } = useThemeColors();
 
@@ -99,8 +99,9 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
+    paddingTop: 50,
   },
   modalContainer: {
     width: '90%',

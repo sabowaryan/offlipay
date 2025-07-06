@@ -16,4 +16,14 @@ config.resolver.unstable_enablePackageExports = true;
 // Prioritize browser field for web compatibility
 config.resolver.resolverMainFields = ['browser', 'main', 'module'];
 
+// Add specific resolver for Sentry modules
+config.resolver.alias = {
+  ...config.resolver.alias,
+  '@sentry/core': require.resolve('@sentry/core'),
+  '@sentry/utils': require.resolve('@sentry/utils'),
+};
+
+// Add node_modules resolution fallback
+config.resolver.platforms = ['ios', 'android', 'native', 'web'];
+
 module.exports = config;
