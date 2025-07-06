@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { User, Transaction, QRPaymentData } from '@/types';
-import { secureStorage } from './secureStorage';
+import { secureStorage } from './secureStorage.native';
 
 export class StorageService {
   private static db: SQLite.SQLiteDatabase | null = null;
@@ -15,7 +15,7 @@ export class StorageService {
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        phone TEXT NOT NULL,
+        phone TEXT UNIQUE NOT NULL,
         walletId TEXT UNIQUE NOT NULL,
         balance REAL DEFAULT 0,
         pin TEXT NOT NULL,
@@ -41,30 +41,88 @@ export class StorageService {
 
       CREATE INDEX IF NOT EXISTS idx_transactions_wallet ON transactions(fromWalletId, toWalletId);
       CREATE INDEX IF NOT EXISTS idx_transactions_timestamp ON transactions(timestamp);
+      CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
     `);
+  }
+
+  // Check if phone number exists
+  static async checkPhoneExists(phone: string): Promise<boolean> {
+    await this.initializeDatabase();
+    
+    try {
+      const result = await this.db!.getFirstAsync<any>(
+        'SELECT walletId FROM users WHERE phone = ?',
+        [phone.trim()]
+      );
+      
+      return !!result;
+    } catch (error) {
+      console.error('Erreur lors de la vérification du téléphone:', error);
+      return false;
+    }
+  }
+
+  // Check if wallet ID exists
+  static async checkWalletIdExists(walletId: string): Promise<boolean> {
+    await this.initializeDatabase();
+    
+    try {
+      const result = await this.db!.getFirstAsync<any>(
+        'SELECT walletId FROM users WHERE walletId = ?',
+        [walletId]
+      );
+      
+      return !!result;
+    } catch (error) {
+      console.error('Erreur lors de la vérification du wallet ID:', error);
+      return false;
+    }
   }
 
   // User management
   static async saveUser(user: User): Promise<void> {
     await this.initializeDatabase();
     
-    await this.db!.runAsync(
-      `INSERT OR REPLACE INTO users 
-       (id, name, phone, walletId, balance, pin, publicKey, privateKey, createdAt, lastSyncAt) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        user.id,
-        user.name,
-        user.phone,
-        user.walletId,
-        user.balance,
-        user.pin,
-        user.publicKey,
-        user.privateKey,
-        user.createdAt.toISOString(),
-        user.lastSyncAt?.toISOString() || null
-      ]
-    );
+    try {
+      // Vérifier d'abord si le téléphone existe déjà
+      const phoneExists = await this.checkPhoneExists(user.phone);
+      if (phoneExists) {
+        throw new Error('Ce numéro de téléphone est déjà utilisé');
+      }
+
+      // Vérifier si le wallet ID existe déjà
+      const walletExists = await this.checkWalletIdExists(user.walletId);
+      if (walletExists) {
+        throw new Error('Cet ID wallet existe déjà');
+      }
+
+      await this.db!.runAsync(
+        `INSERT INTO users 
+         (id, name, phone, walletId, balance, pin, publicKey, privateKey, createdAt, lastSyncAt) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          user.id,
+          user.name,
+          user.phone,
+          user.walletId,
+          user.balance,
+          user.pin,
+          user.publicKey,
+          user.privateKey,
+          user.createdAt.toISOString(),
+          user.lastSyncAt?.toISOString() || null
+        ]
+      );
+    } catch (error: any) {
+      if (error.message.includes('UNIQUE constraint failed')) {
+        if (error.message.includes('phone')) {
+          throw new Error('Ce numéro de téléphone est déjà utilisé');
+        } else if (error.message.includes('walletId')) {
+          throw new Error('Cet ID wallet existe déjà');
+        }
+      }
+      throw error;
+    }
   }
 
   static async getUser(walletId: string): Promise<User | null> {
@@ -174,5 +232,37 @@ export class StorageService {
       DELETE FROM users;
       DELETE FROM transactions;
     `);
+  }
+
+  // Reset database completely (for testing)
+  static async resetDatabase(): Promise<void> {
+    if (this.db) {
+      await this.db.closeAsync();
+      this.db = null;
+    }
+    
+    // Delete the database file
+    try {
+      await SQLite.deleteDatabaseAsync('offlipay.db');
+    } catch (error) {
+      console.log('Database file not found or already deleted');
+    }
+    
+    // Reinitialize
+    await this.initializeDatabase();
+  }
+
+  // Get all users (for debugging)
+  static async getAllUsers(): Promise<User[]> {
+    await this.initializeDatabase();
+    
+    const results = await this.db!.getAllAsync<any>('SELECT * FROM users');
+    
+    return results.map(result => ({
+      ...result,
+      balance: parseFloat(result.balance),
+      createdAt: new Date(result.createdAt),
+      lastSyncAt: result.lastSyncAt ? new Date(result.lastSyncAt) : undefined
+    }));
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -13,23 +13,34 @@ import {
   Platform,
   Dimensions
 } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { WalletService } from '@/services/WalletService';
-import { User } from '@/types';
+import { User, UserMode } from '@/types';
 import QRGenerator from '@/components/QRGenerator';
 import QRScanner from '@/components/QRScanner';
-import { QrCode, Scan, X, DollarSign, MessageSquare, User as UserIcon } from 'lucide-react-native';
+import { QrCode, Scan, X, DollarSign, MessageSquare, User as UserIcon, ArrowLeft } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/utils/colors';
+import { useUserMode } from '@/hooks/useUserMode';
 
 const { width } = Dimensions.get('window');
 
 export default function PayScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const [user, setUser] = useState<User | null>(WalletService.getCurrentUser());
+  const { userMode } = useUserMode();
   const [mode, setMode] = useState<'generate' | 'scan' | null>(null);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [receiverWalletId, setReceiverWalletId] = useState('');
   const [qrData, setQrData] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    // Réinitialiser le mode si le userMode change
+    setMode(null);
+  }, [userMode]);
 
   const generateQR = async () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -60,7 +71,6 @@ export default function PayScreen() {
   const handleScan = async (scannedData: string) => {
     try {
       const transaction = await WalletService.processQRPayment(scannedData);
-      setMode(null);
       
       const isReceived = transaction.type === 'received';
       Alert.alert(
@@ -71,6 +81,7 @@ export default function PayScreen() {
             text: 'OK',
             onPress: () => {
               setUser(WalletService.getCurrentUser());
+              router.push('/(tabs)/index');
             }
           }
         ]
@@ -102,13 +113,26 @@ export default function PayScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header adaptatif selon le mode */}
       <View style={styles.header}>
-        <Text style={styles.title}>Payment</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <ArrowLeft size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={styles.title}>
+          {userMode === 'buyer' ? 'Buyer Mode' : 'Seller Mode'}
+        </Text>
         <LinearGradient
-          colors={['rgba(0, 230, 118, 0.2)', 'rgba(0, 230, 118, 0.1)']}
-          style={styles.balanceChip}
+          colors={userMode === 'buyer' 
+            ? ['rgba(255, 78, 69, 0.2)', 'rgba(255, 78, 69, 0.1)'] 
+            : ['rgba(0, 230, 118, 0.2)', 'rgba(0, 230, 118, 0.1)']
+          }
+          style={[styles.balanceChip, {
+            borderColor: userMode === 'buyer' ? COLORS.WARM_RED : COLORS.SUCCESS
+          }]}
         >
-          <Text style={styles.balance}>
+          <Text style={[styles.balance, {
+            color: userMode === 'buyer' ? COLORS.WARM_RED : COLORS.SUCCESS
+          }]}>
             ${user.balance.toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -117,42 +141,56 @@ export default function PayScreen() {
         </LinearGradient>
       </View>
 
+      {/* Sélecteur de mode adaptatif */}
       {!mode && (
         <View style={styles.modeSelector}>
-          <TouchableOpacity
-            style={styles.modeButton}
-            onPress={() => setMode('generate')}
-          >
-            <LinearGradient
-              colors={['#1A1A1A', '#2A2A2A']}
-              style={styles.modeButtonGradient}
+          {userMode === 'buyer' ? (
+            <TouchableOpacity
+              style={styles.modeButton}
+              onPress={() => setMode('scan')}
             >
-              <View style={styles.modeIconContainer}>
-                <QrCode size={32} color="#00E676" />
-              </View>
-              <Text style={styles.modeButtonText}>Generate QR</Text>
-              <Text style={styles.modeButtonSubtext}>Create payment request</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.modeButton}
-            onPress={() => setMode('scan')}
-          >
-            <LinearGradient
-              colors={['#1A1A1A', '#2A2A2A']}
-              style={styles.modeButtonGradient}
+              <LinearGradient
+                colors={['#1A1A1A', '#2A2A2A']}
+                style={styles.modeButtonGradient}
+              >
+                <View style={[styles.modeIconContainer, { backgroundColor: 'rgba(255, 78, 69, 0.1)' }]}>
+                  <Scan size={32} color={COLORS.WARM_RED} />
+                </View>
+                <Text style={styles.modeButtonText}>Scan QR to Pay</Text>
+                <Text style={styles.modeButtonSubtext}>Scan a QR code to make payment</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.modeButton}
+              onPress={() => setMode('generate')}
             >
-              <View style={styles.modeIconContainer}>
-                <Scan size={32} color="#00E676" />
-              </View>
-              <Text style={styles.modeButtonText}>Scan QR</Text>
-              <Text style={styles.modeButtonSubtext}>Pay with QR code</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <LinearGradient
+                colors={['#1A1A1A', '#2A2A2A']}
+                style={styles.modeButtonGradient}
+              >
+                <View style={[styles.modeIconContainer, { backgroundColor: 'rgba(0, 230, 118, 0.1)' }]}>
+                  <QrCode size={32} color={COLORS.SUCCESS} />
+                </View>
+                <Text style={styles.modeButtonText}>Generate QR to Receive</Text>
+                <Text style={styles.modeButtonSubtext}>Create a QR code to receive payment</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 
+      {/* Mode Scan (Buyer) */}
+      {mode === 'scan' && (
+        <Modal visible={true} animationType="slide">
+          <QRScanner
+            onScan={handleScan}
+            onClose={() => setMode(null)}
+          />
+        </Modal>
+      )}
+
+      {/* Mode Generate (Seller) */}
       {mode === 'generate' && (
         <KeyboardAvoidingView 
           style={styles.generateContainer}
@@ -170,7 +208,7 @@ export default function PayScreen() {
               <>
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>
-                    <DollarSign size={16} color="#00E676" /> Amount
+                    <DollarSign size={16} color={COLORS.SUCCESS} /> Amount
                   </Text>
                   <TextInput
                     style={styles.input}
@@ -184,10 +222,15 @@ export default function PayScreen() {
                     {quickAmounts.map((quickAmount) => (
                       <TouchableOpacity
                         key={quickAmount}
-                        style={styles.quickAmountButton}
+                        style={[styles.quickAmountButton, {
+                          backgroundColor: 'rgba(0, 230, 118, 0.1)',
+                          borderColor: COLORS.SUCCESS
+                        }]}
                         onPress={() => setAmount(quickAmount.toString())}
                       >
-                        <Text style={styles.quickAmountText}>${quickAmount}</Text>
+                        <Text style={[styles.quickAmountText, { color: COLORS.SUCCESS }]}>
+                          ${quickAmount}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -195,7 +238,7 @@ export default function PayScreen() {
 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>
-                    <UserIcon size={16} color="#00E676" /> Receiver Wallet ID
+                    <UserIcon size={16} color={COLORS.SUCCESS} /> Receiver Wallet ID
                   </Text>
                   <TextInput
                     style={styles.input}
@@ -209,7 +252,7 @@ export default function PayScreen() {
 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>
-                    <MessageSquare size={16} color="#00E676" /> Description (Optional)
+                    <MessageSquare size={16} color={COLORS.SUCCESS} /> Description (Optional)
                   </Text>
                   <TextInput
                     style={[styles.input, styles.textArea]}
@@ -228,7 +271,7 @@ export default function PayScreen() {
                   disabled={generating}
                 >
                   <LinearGradient
-                    colors={generating ? ['#666', '#555'] : ['#00E676', '#00C853']}
+                    colors={generating ? ['#666', '#555'] : [COLORS.SUCCESS, '#00C853']}
                     style={styles.buttonGradient}
                   >
                     <Text style={styles.generateButtonText}>
@@ -240,7 +283,7 @@ export default function PayScreen() {
             ) : (
               <View style={styles.qrContainer}>
                 <Text style={styles.qrTitle}>Payment QR Code</Text>
-                <Text style={styles.qrAmount}>${amount}</Text>
+                <Text style={[styles.qrAmount, { color: COLORS.SUCCESS }]}>${amount}</Text>
                 <Text style={styles.qrDescription}>{description || 'Payment'}</Text>
                 
                 <View style={styles.qrCodeWrapper}>
@@ -251,22 +294,21 @@ export default function PayScreen() {
                   Show this QR code to the payer to complete the transaction
                 </Text>
                 
-                <TouchableOpacity style={styles.newQrButton} onPress={resetForm}>
-                  <Text style={styles.newQrButtonText}>Generate New QR</Text>
+                <TouchableOpacity 
+                  style={[styles.newQrButton, {
+                    backgroundColor: 'rgba(0, 230, 118, 0.1)',
+                    borderColor: COLORS.SUCCESS
+                  }]} 
+                  onPress={resetForm}
+                >
+                  <Text style={[styles.newQrButtonText, { color: COLORS.SUCCESS }]}>
+                    Generate New QR
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
           </ScrollView>
         </KeyboardAvoidingView>
-      )}
-
-      {mode === 'scan' && (
-        <Modal visible={true} animationType="slide">
-          <QRScanner
-            onScan={handleScan}
-            onClose={() => setMode(null)}
-          />
-        </Modal>
       )}
     </SafeAreaView>
   );
@@ -287,6 +329,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#2A2A2A',
   },
+  backButton: {
+    padding: 8,
+  },
   title: {
     fontSize: 28,
     fontWeight: '700',
@@ -305,65 +350,12 @@ const styles = StyleSheet.create({
     color: '#00E676',
     fontFamily: 'Inter-SemiBold',
   },
-  modeSelector: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    gap: 20,
-  },
-  modeButton: {
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  modeButtonGradient: {
-    padding: 32,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
-    borderRadius: 20,
-  },
-  modeIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(0, 230, 118, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modeButtonText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    fontFamily: 'Inter-SemiBold',
-  },
-  modeButtonSubtext: {
-    fontSize: 14,
-    color: '#CCCCCC',
-    fontFamily: 'Inter-Regular',
-  },
   generateContainer: {
     flex: 1,
   },
   form: {
     flex: 1,
     paddingHorizontal: 20,
-  },
-  formHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  formTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    fontFamily: 'Inter-SemiBold',
-  },
-  closeButton: {
-    padding: 8,
   },
   inputGroup: {
     marginBottom: 24,
@@ -491,5 +483,53 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#F44336',
     fontFamily: 'Inter-Regular',
+  },
+  modeSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 20,
+  },
+  modeButton: {
+    flex: 1,
+    padding: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    alignItems: 'center',
+  },
+  modeButtonGradient: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  modeIconContainer: {
+    padding: 12,
+    borderRadius: 12,
+  },
+  modeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginTop: 8,
+    fontFamily: 'Inter-SemiBold',
+  },
+  modeButtonSubtext: {
+    fontSize: 12,
+    color: '#CCCCCC',
+    fontFamily: 'Inter-Regular',
+  },
+  formHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+  },
+  formTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    fontFamily: 'Inter-SemiBold',
+  },
+  closeButton: {
+    padding: 8,
   },
 });

@@ -4,17 +4,60 @@ import { StorageService } from '@/utils/storage';
 
 export class WalletService {
   private static currentUser: User | null = null;
+  private static currentUserMode: 'buyer' | 'seller' = 'buyer';
+
+  // Check if phone number already exists
+  static async checkPhoneExists(phone: string): Promise<boolean> {
+    return await StorageService.checkPhoneExists(phone);
+  }
+
+  // Check if wallet ID already exists
+  static async checkWalletIdExists(walletId: string): Promise<boolean> {
+    return await StorageService.checkWalletIdExists(walletId);
+  }
 
   // Initialize wallet for new user
   static async createWallet(name: string, phone: string, pin: string): Promise<User> {
-    const walletId = await CryptoUtils.generateWalletId();
+    // Validate input data
+    if (!name.trim()) {
+      throw new Error('Le nom est requis');
+    }
+    
+    if (!phone.trim()) {
+      throw new Error('Le numéro de téléphone est requis');
+    }
+    
+    if (pin.length < 4) {
+      throw new Error('Le PIN doit contenir au moins 4 chiffres');
+    }
+
+    // Check if phone number already exists
+    const phoneExists = await this.checkPhoneExists(phone);
+    if (phoneExists) {
+      throw new Error('Ce numéro de téléphone est déjà utilisé');
+    }
+
+    // Generate unique wallet ID
+    let walletId: string;
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    do {
+      walletId = await CryptoUtils.generateWalletId();
+      attempts++;
+      
+      if (attempts > maxAttempts) {
+        throw new Error('Impossible de générer un ID wallet unique');
+      }
+    } while (await this.checkWalletIdExists(walletId));
+
     const { publicKey, privateKey } = await CryptoUtils.generateKeyPair();
     const hashedPin = await CryptoUtils.hashPin(pin, walletId);
     
     const user: User = {
       id: walletId,
-      name,
-      phone,
+      name: name.trim(),
+      phone: phone.trim(),
       walletId,
       balance: 0,
       pin: hashedPin,
@@ -32,14 +75,23 @@ export class WalletService {
 
   // Login to existing wallet
   static async loginWallet(walletId: string, pin: string): Promise<User> {
-    const user = await StorageService.getUser(walletId);
+    // Validate input data
+    if (!walletId.trim()) {
+      throw new Error('L\'ID Wallet est requis');
+    }
+    
+    if (!pin.trim()) {
+      throw new Error('Le PIN est requis');
+    }
+
+    const user = await StorageService.getUser(walletId.trim());
     if (!user) {
-      throw new Error('Wallet not found');
+      throw new Error('Wallet non trouvé');
     }
 
     const hashedPin = await CryptoUtils.hashPin(pin, walletId);
     if (hashedPin !== user.pin) {
-      throw new Error('Invalid PIN');
+      throw new Error('PIN incorrect');
     }
 
     await StorageService.storeSecureData('current_wallet', walletId);
@@ -62,6 +114,11 @@ export class WalletService {
       this.currentUser = user;
     }
     return user;
+  }
+
+  // Check if user is logged in
+  static isLoggedIn(): boolean {
+    return this.currentUser !== null;
   }
 
   // Get wallet balance
@@ -211,5 +268,15 @@ export class WalletService {
   static async logout(): Promise<void> {
     await StorageService.removeSecureData('current_wallet');
     this.currentUser = null;
+  }
+
+  // Get current user mode
+  static getCurrentUserMode(): 'buyer' | 'seller' {
+    return this.currentUserMode;
+  }
+
+  // Set current user mode
+  static setCurrentUserMode(mode: 'buyer' | 'seller'): void {
+    this.currentUserMode = mode;
   }
 }

@@ -1,22 +1,30 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Chrome as Home, CreditCard, Settings, ChartBar as BarChart } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import CustomTabBar from '@/components/CustomTabBar';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const { colors: COLORS, theme } = useThemeColors();
+
   return (
     <Tabs
+      key={theme}
+      tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#1A1A1A',
-          borderTopColor: '#2A2A2A',
+          backgroundColor: COLORS.CARD,
+          borderTopColor: COLORS.GRAY_LIGHT,
           borderTopWidth: 1,
           height: 60,
-          paddingBottom: 8,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: '#00E676',
-        tabBarInactiveTintColor: '#666',
+        tabBarActiveTintColor: COLORS.PRIMARY,
+        tabBarInactiveTintColor: COLORS.GRAY_MEDIUM,
         tabBarLabelStyle: {
           fontSize: 12,
           fontFamily: 'Inter-Medium',
