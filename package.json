@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "EXPO_NO_TELEMETRY=1 expo start",
+    "dev": "set APP_VARIANT=development && set EXPO_NO_TELEMETRY=1 && expo start",
+    "preview": "set APP_VARIANT=preview && set EXPO_NO_TELEMETRY=1 && expo start",
+    "start": "set APP_VARIANT=production && set EXPO_NO_TELEMETRY=1 && expo start",
     "build:web": "expo export --platform web",
     "lint": "expo lint",
     "setup:icons": "node scripts/setup-icons.js",

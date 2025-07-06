@@ -10,6 +10,9 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
       "bundleIdentifier": "com.offlipay.app",
       "icon": "./assets/images/AppIcons/Assets.xcassets/AppIcon.appiconset/1024.png"
     },
