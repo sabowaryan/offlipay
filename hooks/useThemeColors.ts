@@ -7,40 +7,68 @@ export type ThemeMode = 'light' | 'dark' | 'auto';
 
 const THEME_STORAGE_KEY = 'offlipay_theme_mode';
 
+// État global pour forcer les re-renders
+let globalThemeListeners: (() => void)[] = [];
+let globalManualTheme: ThemeMode = 'auto';
+let isInitialized = false;
+
+const notifyThemeChange = () => {
+  globalThemeListeners.forEach(listener => listener());
+};
+
 export function useThemeColors() {
   const systemTheme = useColorScheme();
-  const [manualTheme, setManualTheme] = useState<ThemeMode>('auto');
-  const [isLoading, setIsLoading] = useState(true);
+  const [, forceUpdate] = useState({});
 
-  // Charger le thème sauvegardé au démarrage
+  // Charger le thème sauvegardé au démarrage (une seule fois)
   useEffect(() => {
-    loadSavedTheme();
+    if (!isInitialized) {
+      loadSavedTheme();
+    }
+  }, []);
+
+  // S'inscrire aux notifications de changement de thème
+  useEffect(() => {
+    const handleThemeChange = () => {
+      forceUpdate({});
+    };
+    
+    globalThemeListeners.push(handleThemeChange);
+    return () => {
+      const index = globalThemeListeners.indexOf(handleThemeChange);
+      if (index > -1) {
+        globalThemeListeners.splice(index, 1);
+      }
+    };
   }, []);
 
   const loadSavedTheme = async () => {
     try {
       const savedTheme = await SecureStore.getItemAsync(THEME_STORAGE_KEY);
+      
       if (savedTheme && ['light', 'dark', 'auto'].includes(savedTheme)) {
-        setManualTheme(savedTheme as ThemeMode);
+        globalManualTheme = savedTheme as ThemeMode;
+        notifyThemeChange();
       }
+      isInitialized = true;
     } catch (error) {
       console.warn('Erreur lors du chargement du thème:', error);
-    } finally {
-      setIsLoading(false);
+      isInitialized = true;
     }
   };
 
   const setTheme = async (theme: ThemeMode) => {
     try {
       await SecureStore.setItemAsync(THEME_STORAGE_KEY, theme);
-      setManualTheme(theme);
+      globalManualTheme = theme;
+      notifyThemeChange();
     } catch (error) {
       console.warn('Erreur lors de la sauvegarde du thème:', error);
     }
   };
 
   // Déterminer le thème final avec fallback
-  const finalTheme = manualTheme === 'auto' ? (systemTheme || 'light') : manualTheme;
+  const finalTheme = globalManualTheme === 'auto' ? (systemTheme || 'light') : globalManualTheme;
   
   // Toujours retourner des couleurs valides, même pendant le chargement
   const colors = finalTheme === 'dark' ? DARK_COLORS : LIGHT_COLORS;
@@ -49,10 +77,10 @@ export function useThemeColors() {
   return {
     colors,
     theme: finalTheme,
-    manualTheme,
+    manualTheme: globalManualTheme,
     setTheme,
-    isLoading,
-    isAuto: manualTheme === 'auto',
+    isLoading: !isInitialized,
+    isAuto: globalManualTheme === 'auto',
     systemTheme,
   };
 } 

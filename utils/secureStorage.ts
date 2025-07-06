@@ -1,5 +1,5 @@
 export interface SecureStorage {
-  setItem(key: string, value: string): Promise<void>;
-  getItem(key: string): Promise<string | null>;
-  removeItem(key: string): Promise<void>;
+  setItemAsync(key: string, value: string): Promise<void>;
+  getItemAsync(key: string): Promise<string | null>;
+  deleteItemAsync(key: string): Promise<void>;
 }

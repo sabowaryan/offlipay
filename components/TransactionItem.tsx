@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Transaction } from '@/types';
 import { ArrowUpRight, ArrowDownLeft, Clock, CircleCheck as CheckCircle, Circle as XCircle, Banknote } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { TYPO } from '@/utils/typography';
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -10,17 +12,18 @@ interface TransactionItemProps {
 }
 
 export default function TransactionItem({ transaction, onPress }: TransactionItemProps) {
+  const { colors: COLORS } = useThemeColors();
   const isReceived = transaction.type === 'received';
   const isSystem = transaction.fromWalletId === 'SYSTEM';
   
   const getStatusIcon = () => {
     switch (transaction.status) {
       case 'completed':
-        return <CheckCircle size={16} color="#00E676" />;
+        return <CheckCircle size={16} color={COLORS.SUCCESS} />;
       case 'pending':
-        return <Clock size={16} color="#FFC107" />;
+        return <Clock size={16} color={COLORS.WARNING} />;
       case 'failed':
-        return <XCircle size={16} color="#F44336" />;
+        return <XCircle size={16} color={COLORS.ERROR} />;
       default:
         return null;
     }
@@ -29,18 +32,18 @@ export default function TransactionItem({ transaction, onPress }: TransactionIte
   const getStatusColor = () => {
     switch (transaction.status) {
       case 'completed':
-        return '#00E676';
+        return COLORS.SUCCESS;
       case 'pending':
-        return '#FFC107';
+        return COLORS.WARNING;
       case 'failed':
-        return '#F44336';
+        return COLORS.ERROR;
       default:
-        return '#666';
+        return COLORS.GRAY_MEDIUM;
     }
   };
 
   const formatAmount = (amount: number) => {
-    return amount.toLocaleString('en-US', {
+    return amount.toLocaleString('fr-FR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -52,16 +55,16 @@ export default function TransactionItem({ transaction, onPress }: TransactionIte
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) {
-      return date.toLocaleTimeString('en-US', { 
+      return date.toLocaleTimeString('fr-FR', { 
         hour: '2-digit', 
         minute: '2-digit' 
       });
     } else if (diffDays === 1) {
-      return 'Yesterday';
+      return 'Hier';
     } else if (diffDays < 7) {
-      return `${diffDays} days ago`;
+      return `Il y a ${diffDays} jours`;
     } else {
-      return date.toLocaleDateString('en-US', { 
+      return date.toLocaleDateString('fr-FR', { 
         month: 'short', 
         day: 'numeric' 
       });
@@ -70,26 +73,36 @@ export default function TransactionItem({ transaction, onPress }: TransactionIte
 
   const getTransactionIcon = () => {
     if (isSystem) {
-      return <Banknote size={24} color="#00E676" />;
+      return <Banknote size={24} color={COLORS.SUCCESS} />;
     }
     return isReceived ? (
-      <ArrowDownLeft size={24} color="#00E676" />
+      <ArrowDownLeft size={24} color={COLORS.SUCCESS} />
     ) : (
-      <ArrowUpRight size={24} color="#FF6B6B" />
+      <ArrowUpRight size={24} color={COLORS.ERROR} />
     );
   };
 
   const getIconBackground = () => {
     if (isSystem) {
-      return ['rgba(0, 230, 118, 0.2)', 'rgba(0, 230, 118, 0.1)'];
+      return [COLORS.SUCCESS + '20', COLORS.SUCCESS + '10'] as const;
     }
     return isReceived ? 
-      ['rgba(0, 230, 118, 0.2)', 'rgba(0, 230, 118, 0.1)'] : 
-      ['rgba(255, 107, 107, 0.2)', 'rgba(255, 107, 107, 0.1)'];
+      [COLORS.SUCCESS + '20', COLORS.SUCCESS + '10'] as const : 
+      [COLORS.ERROR + '20', COLORS.ERROR + '10'] as const;
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity 
+      style={[
+        styles.container, 
+        { 
+          backgroundColor: COLORS.CARD,
+          borderColor: COLORS.GRAY_LIGHT,
+          shadowColor: COLORS.TEXT
+        }
+      ]} 
+      onPress={onPress}
+    >
       <LinearGradient
         colors={getIconBackground()}
         style={styles.iconContainer}
@@ -99,34 +112,36 @@ export default function TransactionItem({ transaction, onPress }: TransactionIte
       
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>
-            {isSystem ? 'Money Added' : 
-             isReceived ? 'Payment Received' : 'Payment Sent'}
+          <Text style={[styles.title, { color: COLORS.TEXT }]}>
+            {isSystem ? 'Fonds ajoutés' : 
+             isReceived ? 'Paiement reçu' : 'Paiement envoyé'}
           </Text>
-          <Text style={[styles.amount, { color: isReceived ? '#00E676' : '#FF6B6B' }]}>
-            {isReceived ? '+' : '-'}${formatAmount(transaction.amount)}
+          <Text style={[styles.amount, { color: isReceived ? COLORS.SUCCESS : COLORS.ERROR }]}>
+            {isReceived ? '+' : '-'}{formatAmount(transaction.amount)}€
           </Text>
         </View>
         
         <View style={styles.details}>
-          <Text style={styles.description} numberOfLines={1}>
-            {transaction.description || 'No description'}
+          <Text style={[styles.description, { color: COLORS.GRAY_MEDIUM }]} numberOfLines={1}>
+            {transaction.description || 'Aucune description'}
           </Text>
           <View style={styles.statusRow}>
             {getStatusIcon()}
             <Text style={[styles.status, { color: getStatusColor() }]}>
-              {transaction.status}
+              {transaction.status === 'completed' ? 'Terminé' :
+               transaction.status === 'pending' ? 'En cours' :
+               transaction.status === 'failed' ? 'Échoué' : transaction.status}
             </Text>
           </View>
         </View>
         
         <View style={styles.footer}>
-          <Text style={styles.date}>{formatDate(transaction.timestamp)}</Text>
-          <Text style={styles.walletId}>
-            {isSystem ? 'System' : 
+          <Text style={[styles.date, { color: COLORS.GRAY_MEDIUM }]}>{formatDate(transaction.timestamp)}</Text>
+          <Text style={[styles.walletId, { color: COLORS.GRAY_MEDIUM }]}>
+            {isSystem ? 'Système' : 
              isReceived ? 
-               `From: ${transaction.fromWalletId.substring(0, 8)}...` : 
-               `To: ${transaction.toWalletId.substring(0, 8)}...`}
+               `De: ${transaction.fromWalletId.substring(0, 8)}...` : 
+               `À: ${transaction.toWalletId.substring(0, 8)}...`}
           </Text>
         </View>
       </View>
@@ -137,13 +152,11 @@ export default function TransactionItem({ transaction, onPress }: TransactionIte
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#1A1A1A',
     padding: 16,
     marginHorizontal: 16,
     marginVertical: 4,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#2A2A2A',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -168,15 +181,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    fontFamily: 'Inter-SemiBold',
+    ...TYPO.h3,
   },
   amount: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Inter-Bold',
+    ...TYPO.h3,
   },
   details: {
     flexDirection: 'row',
@@ -185,22 +193,18 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   description: {
-    fontSize: 14,
-    color: '#CCCCCC',
+    ...TYPO.body,
     flex: 1,
     marginRight: 8,
-    fontFamily: 'Inter-Regular',
   },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   status: {
-    fontSize: 12,
-    fontWeight: '500',
+    ...TYPO.caption,
     marginLeft: 4,
     textTransform: 'capitalize',
-    fontFamily: 'Inter-Medium',
   },
   footer: {
     flexDirection: 'row',
@@ -208,13 +212,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   date: {
-    fontSize: 12,
-    color: '#666',
-    fontFamily: 'Inter-Regular',
+    ...TYPO.caption,
   },
   walletId: {
-    fontSize: 12,
-    color: '#666',
-    fontFamily: 'Inter-Regular',
+    ...TYPO.caption,
   },
 });

@@ -11,45 +11,103 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Dimensions
+  Dimensions,
+  StatusBar,
+  useWindowDimensions,
+  RefreshControl
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { WalletService } from '@/services/WalletService';
 import { User, UserMode } from '@/types';
 import QRGenerator from '@/components/QRGenerator';
 import QRScanner from '@/components/QRScanner';
-import { QrCode, Scan, X, DollarSign, MessageSquare, User as UserIcon, ArrowLeft } from 'lucide-react-native';
+import { 
+  QrCode, 
+  Scan, 
+  X, 
+  DollarSign, 
+  MessageSquare, 
+  User as UserIcon, 
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Copy,
+  CreditCard,
+  Settings,
+  Zap,
+  Activity,
+  TrendingUp,
+  TrendingDown
+} from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '@/utils/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { TYPO } from '@/utils/typography';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserMode } from '@/hooks/useUserMode';
+import Logo from '@/components/Logo';
 
-const { width } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
 export default function PayScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { colors: COLORS, theme } = useThemeColors();
+  const { width: windowWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [user, setUser] = useState<User | null>(WalletService.getCurrentUser());
-  const { userMode } = useUserMode();
+  const { userMode, toggleUserMode } = useUserMode();
   const [mode, setMode] = useState<'generate' | 'scan' | null>(null);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [receiverWalletId, setReceiverWalletId] = useState('');
   const [qrData, setQrData] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [balanceVisible, setBalanceVisible] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [errors, setErrors] = useState<{
+    amount?: string;
+    receiverWalletId?: string;
+  }>({});
+
+  const isTablet = windowWidth > 768;
+  const isSmallScreen = windowWidth < 375;
 
   useEffect(() => {
     // Réinitialiser le mode si le userMode change
     setMode(null);
   }, [userMode]);
 
-  const generateQR = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
-      return;
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setUser(WalletService.getCurrentUser());
+    setRefreshing(false);
+  };
+
+  const validateForm = () => {
+    const newErrors: { amount?: string; receiverWalletId?: string } = {};
+
+    // Validation du montant
+    if (!amount || amount.trim() === '') {
+      newErrors.amount = 'Le montant est requis';
+    } else if (parseFloat(amount) <= 0) {
+      newErrors.amount = 'Le montant doit être supérieur à 0';
+    } else if (parseFloat(amount) > 10000) {
+      newErrors.amount = 'Le montant ne peut pas dépasser 10 000€';
     }
 
-    if (!receiverWalletId) {
-      Alert.alert('Error', 'Please enter receiver wallet ID');
+    // Validation de l'ID destinataire
+    if (!receiverWalletId || receiverWalletId.trim() === '') {
+      newErrors.receiverWalletId = 'L\'ID du destinataire est requis';
+    } else if (receiverWalletId.length < 10) {
+      newErrors.receiverWalletId = 'L\'ID du destinataire doit contenir au moins 10 caractères';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const generateQR = async () => {
+    if (!validateForm()) {
       return;
     }
 
@@ -57,12 +115,12 @@ export default function PayScreen() {
       setGenerating(true);
       const qrString = await WalletService.generatePaymentQR(
         parseFloat(amount),
-        description || 'Payment',
+        description || 'Paiement',
         receiverWalletId
       );
       setQrData(qrString);
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to generate QR code');
+      Alert.alert('Erreur', error.message || 'Échec de la génération du QR code');
     } finally {
       setGenerating(false);
     }
@@ -74,20 +132,20 @@ export default function PayScreen() {
       
       const isReceived = transaction.type === 'received';
       Alert.alert(
-        'Payment Successful!',
-        `You ${isReceived ? 'received' : 'sent'} $${transaction.amount}\n\nDescription: ${transaction.description}`,
+        'Paiement réussi !',
+        `Vous avez ${isReceived ? 'reçu' : 'envoyé'} ${transaction.amount.toFixed(2)}€\n\nDescription: ${transaction.description}`,
         [
           {
             text: 'OK',
             onPress: () => {
               setUser(WalletService.getCurrentUser());
-              router.push('/(tabs)/index');
+              router.push('/(tabs)');
             }
           }
         ]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to process payment');
+      Alert.alert('Erreur', error.message || 'Échec du traitement du paiement');
     }
   };
 
@@ -97,219 +155,426 @@ export default function PayScreen() {
     setReceiverWalletId('');
     setQrData(null);
     setMode(null);
+    setErrors({});
+  };
+
+  const copyWalletId = async () => {
+    if (user) {
+      try {
+        // Implémenter la copie du wallet ID
+        Alert.alert('Copié', 'ID du portefeuille copié dans le presse-papiers');
+      } catch (error) {
+        Alert.alert('Erreur', 'Impossible de copier l\'ID du portefeuille');
+      }
+    }
+  };
+
+  const formatBalance = (balance: number) => {
+    if (balanceVisible) {
+      return balance.toLocaleString('fr-FR', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+    return '••••••••';
   };
 
   const quickAmounts = [10, 25, 50, 100];
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: COLORS.BACKGROUND }]}>
+        <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Please login first</Text>
+          <Logo size={64} />
+          <Text style={[styles.errorText, { color: COLORS.ERROR }]}>
+            Veuillez vous connecter d'abord
+          </Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header adaptatif selon le mode */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={styles.title}>
-          {userMode === 'buyer' ? 'Buyer Mode' : 'Seller Mode'}
-        </Text>
-        <LinearGradient
-          colors={userMode === 'buyer' 
-            ? ['rgba(255, 78, 69, 0.2)', 'rgba(255, 78, 69, 0.1)'] 
-            : ['rgba(0, 230, 118, 0.2)', 'rgba(0, 230, 118, 0.1)']
-          }
-          style={[styles.balanceChip, {
-            borderColor: userMode === 'buyer' ? COLORS.WARM_RED : COLORS.SUCCESS
-          }]}
-        >
-          <Text style={[styles.balance, {
-            color: userMode === 'buyer' ? COLORS.WARM_RED : COLORS.SUCCESS
-          }]}>
-            ${user.balance.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </Text>
-        </LinearGradient>
-      </View>
-
-      {/* Sélecteur de mode adaptatif */}
-      {!mode && (
-        <View style={styles.modeSelector}>
-          {userMode === 'buyer' ? (
-            <TouchableOpacity
-              style={styles.modeButton}
-              onPress={() => setMode('scan')}
+    <SafeAreaView style={[styles.container, { backgroundColor: COLORS.BACKGROUND }]}>
+      <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
+      
+      {/* Header moderne avec gradient */}
+      <LinearGradient
+        colors={[COLORS.PRIMARY, COLORS.PRIMARY_LIGHT]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.headerGradient, { paddingTop: insets.top - 8 }]}
+      >
+        <View style={[styles.headerContent, { paddingTop: -16 }]}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity 
+              style={[styles.backButton, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}
+              onPress={() => router.back()}
             >
-              <LinearGradient
-                colors={['#1A1A1A', '#2A2A2A']}
-                style={styles.modeButtonGradient}
-              >
-                <View style={[styles.modeIconContainer, { backgroundColor: 'rgba(255, 78, 69, 0.1)' }]}>
-                  <Scan size={32} color={COLORS.WARM_RED} />
-                </View>
-                <Text style={styles.modeButtonText}>Scan QR to Pay</Text>
-                <Text style={styles.modeButtonSubtext}>Scan a QR code to make payment</Text>
-              </LinearGradient>
+              <ArrowLeft size={20} color={COLORS.WHITE} />
             </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={styles.modeButton}
-              onPress={() => setMode('generate')}
-            >
-              <LinearGradient
-                colors={['#1A1A1A', '#2A2A2A']}
-                style={styles.modeButtonGradient}
-              >
-                <View style={[styles.modeIconContainer, { backgroundColor: 'rgba(0, 230, 118, 0.1)' }]}>
-                  <QrCode size={32} color={COLORS.SUCCESS} />
-                </View>
-                <Text style={styles.modeButtonText}>Generate QR to Receive</Text>
-                <Text style={styles.modeButtonSubtext}>Create a QR code to receive payment</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
-      {/* Mode Scan (Buyer) */}
-      {mode === 'scan' && (
-        <Modal visible={true} animationType="slide">
-          <QRScanner
-            onScan={handleScan}
-            onClose={() => setMode(null)}
-          />
-        </Modal>
-      )}
-
-      {/* Mode Generate (Seller) */}
-      {mode === 'generate' && (
-        <KeyboardAvoidingView 
-          style={styles.generateContainer}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
-            <View style={styles.formHeader}>
-              <Text style={styles.formTitle}>Generate Payment QR</Text>
-              <TouchableOpacity onPress={resetForm} style={styles.closeButton}>
-                <X size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-
-            {!qrData ? (
-              <>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>
-                    <DollarSign size={16} color={COLORS.SUCCESS} /> Amount
-                  </Text>
-                  <TextInput
-                    style={styles.input}
-                    value={amount}
-                    onChangeText={setAmount}
-                    placeholder="0.00"
-                    placeholderTextColor="#666"
-                    keyboardType="numeric"
-                  />
-                  <View style={styles.quickAmounts}>
-                    {quickAmounts.map((quickAmount) => (
-                      <TouchableOpacity
-                        key={quickAmount}
-                        style={[styles.quickAmountButton, {
-                          backgroundColor: 'rgba(0, 230, 118, 0.1)',
-                          borderColor: COLORS.SUCCESS
-                        }]}
-                        onPress={() => setAmount(quickAmount.toString())}
-                      >
-                        <Text style={[styles.quickAmountText, { color: COLORS.SUCCESS }]}>
-                          ${quickAmount}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>
-                    <UserIcon size={16} color={COLORS.SUCCESS} /> Receiver Wallet ID
-                  </Text>
-                  <TextInput
-                    style={styles.input}
-                    value={receiverWalletId}
-                    onChangeText={setReceiverWalletId}
-                    placeholder="Enter receiver's wallet ID"
-                    placeholderTextColor="#666"
-                    autoCapitalize="none"
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>
-                    <MessageSquare size={16} color={COLORS.SUCCESS} /> Description (Optional)
-                  </Text>
-                  <TextInput
-                    style={[styles.input, styles.textArea]}
-                    value={description}
-                    onChangeText={setDescription}
-                    placeholder="Payment description"
-                    placeholderTextColor="#666"
-                    multiline
-                    numberOfLines={3}
-                  />
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.generateButton, generating && styles.buttonDisabled]}
-                  onPress={generateQR}
-                  disabled={generating}
-                >
-                  <LinearGradient
-                    colors={generating ? ['#666', '#555'] : [COLORS.SUCCESS, '#00C853']}
-                    style={styles.buttonGradient}
-                  >
-                    <Text style={styles.generateButtonText}>
-                      {generating ? 'Generating...' : 'Generate QR Code'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <View style={styles.qrContainer}>
-                <Text style={styles.qrTitle}>Payment QR Code</Text>
-                <Text style={[styles.qrAmount, { color: COLORS.SUCCESS }]}>${amount}</Text>
-                <Text style={styles.qrDescription}>{description || 'Payment'}</Text>
-                
-                <View style={styles.qrCodeWrapper}>
-                  <QRGenerator data={qrData} />
-                </View>
-                
-                <Text style={styles.qrInstructions}>
-                  Show this QR code to the payer to complete the transaction
+            
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Paiement</Text>
+              <Text style={styles.headerSubtitle}>
+                {userMode === 'buyer' ? 'Mode Acheteur' : 'Mode Vendeur'}
+              </Text>
+              <View style={styles.balanceContainer}>
+                <Text style={[styles.balanceText, { color: COLORS.WHITE + 'CC' }]}>
+                  Solde: {formatBalance(user.balance)}
                 </Text>
-                
                 <TouchableOpacity 
-                  style={[styles.newQrButton, {
-                    backgroundColor: 'rgba(0, 230, 118, 0.1)',
-                    borderColor: COLORS.SUCCESS
-                  }]} 
-                  onPress={resetForm}
+                  onPress={() => setBalanceVisible(!balanceVisible)}
+                  style={styles.eyeButton}
                 >
-                  <Text style={[styles.newQrButtonText, { color: COLORS.SUCCESS }]}>
-                    Generate New QR
-                  </Text>
+                  {balanceVisible ? (
+                    <Eye size={14} color={COLORS.WHITE + 'CC'} />
+                  ) : (
+                    <EyeOff size={14} color={COLORS.WHITE + 'CC'} />
+                  )}
                 </TouchableOpacity>
               </View>
+            </View>
+            
+            <View style={styles.headerActions}>
+              <TouchableOpacity 
+                style={[styles.headerButton, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}
+                onPress={() => router.push('/(tabs)/settings')}
+              >
+                <Settings size={20} color={COLORS.WHITE} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.headerButton, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}
+                onPress={toggleUserMode}
+              >
+                <Zap size={20} color={COLORS.WHITE} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor={COLORS.PRIMARY}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Sélecteur de mode adaptatif */}
+        {!mode && (
+          <View style={styles.modeSelector}>
+            {userMode === 'buyer' ? (
+              <TouchableOpacity
+                style={[styles.modeButton, { backgroundColor: COLORS.CARD, borderColor: COLORS.GRAY_LIGHT }]}
+                onPress={() => setMode('scan')}
+              >
+                <LinearGradient
+                  colors={[COLORS.ERROR + '15', COLORS.ERROR + '05']}
+                  style={styles.modeIconContainer}
+                >
+                  <Scan size={32} color={COLORS.ERROR} />
+                </LinearGradient>
+                <Text style={[styles.modeButtonText, { color: COLORS.TEXT }]}>
+                  Scanner QR pour Payer
+                </Text>
+                <Text style={[styles.modeButtonSubtext, { color: COLORS.GRAY_MEDIUM }]}>
+                  Scannez un QR code pour effectuer un paiement
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.modeButton, { backgroundColor: COLORS.CARD, borderColor: COLORS.GRAY_LIGHT }]}
+                onPress={() => setMode('generate')}
+              >
+                <LinearGradient
+                  colors={[COLORS.SUCCESS + '15', COLORS.SUCCESS + '05']}
+                  style={styles.modeIconContainer}
+                >
+                  <QrCode size={32} color={COLORS.SUCCESS} />
+                </LinearGradient>
+                <Text style={[styles.modeButtonText, { color: COLORS.TEXT }]}>
+                  Générer QR pour Recevoir
+                </Text>
+                <Text style={[styles.modeButtonSubtext, { color: COLORS.GRAY_MEDIUM }]}>
+                  Créez un QR code pour recevoir un paiement
+                </Text>
+              </TouchableOpacity>
             )}
-          </ScrollView>
-        </KeyboardAvoidingView>
-      )}
+          </View>
+        )}
+
+        {/* Mode Scan (Buyer) */}
+        {mode === 'scan' && (
+          <Modal visible={true} animationType="slide">
+            <QRScanner
+              onScan={handleScan}
+              onClose={() => setMode(null)}
+            />
+          </Modal>
+        )}
+
+        {/* Mode Generate (Seller) */}
+        {mode === 'generate' && (
+          <View style={styles.generateContainer}>
+            <ScrollView 
+              style={styles.form} 
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.formContent}
+            >
+              {/* Header du formulaire */}
+              <View style={styles.formHeader}>
+                <View style={styles.formHeaderContent}>
+                  <View style={styles.formHeaderLeft}>
+                    <View style={[styles.formIcon, { backgroundColor: COLORS.SUCCESS + '15' }]}>
+                      <QrCode size={24} color={COLORS.SUCCESS} />
+                    </View>
+                    <View style={styles.formHeaderText}>
+                      <Text style={[styles.formTitle, { color: COLORS.TEXT }]}>
+                        Générer QR de Paiement
+                      </Text>
+                      <Text style={[styles.formSubtitle, { color: COLORS.GRAY_MEDIUM }]}>
+                        Créez un QR code pour recevoir un paiement
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity 
+                    onPress={resetForm} 
+                    style={[styles.closeButton, { backgroundColor: COLORS.GRAY_LIGHT }]}
+                  >
+                    <X size={20} color={COLORS.GRAY_MEDIUM} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {!qrData ? (
+                <View style={styles.formBody}>
+                  {/* Section Montant */}
+                  <View style={[styles.formSection, { 
+                    backgroundColor: COLORS.CARD, 
+                    borderColor: COLORS.GRAY_LIGHT 
+                  }]}>
+                    <View style={styles.sectionHeader}>
+                      <DollarSign size={20} color={COLORS.SUCCESS} />
+                      <Text style={[styles.sectionTitle, { color: COLORS.TEXT }]}>
+                        Montant du Paiement
+                      </Text>
+                    </View>
+                    
+                    <View style={[styles.amountInputContainer, { 
+                      backgroundColor: COLORS.BACKGROUND, 
+                      borderColor: errors.amount ? COLORS.ERROR : COLORS.GRAY_LIGHT 
+                    }]}>
+                      <Text style={[styles.currencySymbol, { color: COLORS.GRAY_MEDIUM }]}>
+                        €
+                      </Text>
+                      <TextInput
+                        style={[styles.amountInput, { color: COLORS.TEXT }]}
+                        value={amount}
+                        onChangeText={(text) => {
+                          setAmount(text);
+                          if (errors.amount) {
+                            setErrors(prev => ({ ...prev, amount: undefined }));
+                          }
+                        }}
+                        placeholder="0.00"
+                        placeholderTextColor={COLORS.GRAY_MEDIUM}
+                        keyboardType="numeric"
+                        textAlign="center"
+                      />
+                    </View>
+
+                    {errors.amount && (
+                      <View style={styles.errorContainer}>
+                        <Text style={[styles.errorText, { color: COLORS.ERROR }]}>
+                          {errors.amount}
+                        </Text>
+                      </View>
+                    )}
+
+                    <View style={[styles.quickAmounts, { 
+                      flexDirection: isTablet ? 'row' : 'column',
+                      gap: isTablet ? 8 : 8 
+                    }]}>
+                      {quickAmounts.map((quickAmount) => (
+                        <TouchableOpacity
+                          key={quickAmount}
+                          style={[styles.quickAmountButton, {
+                            backgroundColor: amount === quickAmount.toString() 
+                              ? COLORS.SUCCESS 
+                              : COLORS.SUCCESS + '15',
+                            borderColor: COLORS.SUCCESS,
+                            width: isTablet ? undefined : '100%'
+                          }]}
+                          onPress={() => {
+                            setAmount(quickAmount.toString());
+                            if (errors.amount) {
+                              setErrors(prev => ({ ...prev, amount: undefined }));
+                            }
+                          }}
+                        >
+                          <Text style={[styles.quickAmountText, { 
+                            color: amount === quickAmount.toString() 
+                              ? COLORS.WHITE 
+                              : COLORS.SUCCESS 
+                          }]}>
+                            {quickAmount}€
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Section Destinataire */}
+                  <View style={[styles.formSection, { 
+                    backgroundColor: COLORS.CARD, 
+                    borderColor: COLORS.GRAY_LIGHT 
+                  }]}>
+                    <View style={styles.sectionHeader}>
+                      <UserIcon size={20} color={COLORS.SUCCESS} />
+                      <Text style={[styles.sectionTitle, { color: COLORS.TEXT }]}>
+                        Destinataire
+                      </Text>
+                    </View>
+                    
+                    <View style={[styles.inputContainer, { 
+                      backgroundColor: COLORS.BACKGROUND, 
+                      borderColor: errors.receiverWalletId ? COLORS.ERROR : COLORS.GRAY_LIGHT 
+                    }]}>
+                      <TextInput
+                        style={[styles.input, { color: COLORS.TEXT }]}
+                        value={receiverWalletId}
+                        onChangeText={(text) => {
+                          setReceiverWalletId(text);
+                          if (errors.receiverWalletId) {
+                            setErrors(prev => ({ ...prev, receiverWalletId: undefined }));
+                          }
+                        }}
+                        placeholder="Entrez l'ID du portefeuille destinataire"
+                        placeholderTextColor={COLORS.GRAY_MEDIUM}
+                        autoCapitalize="none"
+                      />
+                    </View>
+
+                    {errors.receiverWalletId && (
+                      <View style={styles.errorContainer}>
+                        <Text style={[styles.errorText, { color: COLORS.ERROR }]}>
+                          {errors.receiverWalletId}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Section Description */}
+                  <View style={styles.formSection}>
+                    <View style={styles.sectionHeader}>
+                      <MessageSquare size={20} color={COLORS.SUCCESS} />
+                      <Text style={[styles.sectionTitle, { color: COLORS.TEXT }]}>
+                        Description (Optionnel)
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        style={[styles.textArea, { color: COLORS.TEXT }]}
+                        value={description}
+                        onChangeText={setDescription}
+                        placeholder="Description du paiement..."
+                        placeholderTextColor={COLORS.GRAY_MEDIUM}
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
+                      />
+                    </View>
+                  </View>
+
+                  {/* Bouton de génération */}
+                  <TouchableOpacity
+                    style={[styles.generateButton, generating && styles.buttonDisabled]}
+                    onPress={generateQR}
+                    disabled={generating}
+                  >
+                    <LinearGradient
+                      colors={generating 
+                        ? [COLORS.GRAY_MEDIUM, COLORS.GRAY_LIGHT] 
+                        : [COLORS.SUCCESS, COLORS.SUCCESS + 'DD']
+                      }
+                      style={styles.buttonGradient}
+                    >
+                      {generating ? (
+                        <View style={styles.loadingContainer}>
+                          <Activity size={20} color={COLORS.WHITE} />
+                          <Text style={styles.generateButtonText}>
+                            Génération...
+                          </Text>
+                        </View>
+                      ) : (
+                        <>
+                          <QrCode size={24} color={COLORS.WHITE} />
+                          <Text style={styles.generateButtonText}>
+                            Générer QR Code
+                          </Text>
+                        </>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.qrContainer}>
+                  <View style={styles.qrHeader}>
+                    <View style={[styles.qrIcon, { backgroundColor: COLORS.SUCCESS + '15' }]}>
+                      <QrCode size={32} color={COLORS.SUCCESS} />
+                    </View>
+                    <Text style={[styles.qrTitle, { color: COLORS.TEXT }]}>
+                      QR Code de Paiement
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.qrDetails}>
+                    <Text style={[styles.qrAmount, { color: COLORS.SUCCESS }]}>
+                      {amount}€
+                    </Text>
+                    <Text style={[styles.qrDescription, { color: COLORS.GRAY_MEDIUM }]}>
+                      {description || 'Paiement'}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.qrCodeWrapper}>
+                    <QRGenerator data={qrData} />
+                  </View>
+                  
+                  <View style={styles.qrInstructions}>
+                    <Text style={[styles.qrInstructionsText, { color: COLORS.GRAY_MEDIUM }]}>
+                      Montrez ce QR code au payeur pour compléter la transaction
+                    </Text>
+                  </View>
+                  
+                  <TouchableOpacity 
+                    style={[styles.newQrButton, {
+                      backgroundColor: COLORS.SUCCESS + '15',
+                      borderColor: COLORS.SUCCESS
+                    }]} 
+                    onPress={resetForm}
+                  >
+                    <QrCode size={16} color={COLORS.SUCCESS} />
+                    <Text style={[styles.newQrButtonText, { color: COLORS.SUCCESS }]}>
+                      Générer Nouveau QR
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -317,219 +582,350 @@ export default function PayScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2A2A2A',
+    paddingBottom: 100,
+  },
+  headerGradient: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  headerContent: {
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   backButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    fontFamily: 'Inter-Bold',
-  },
-  balanceChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    width: 40,
+    height: 40,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#00E676',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  balance: {
-    fontSize: 16,
-    color: '#00E676',
-    fontFamily: 'Inter-SemiBold',
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 16,
+  },
+  headerTitle: {
+    ...TYPO.h1,
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  headerSubtitle: {
+    ...TYPO.caption,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  balanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    gap: 8,
+  },
+  balanceText: {
+    ...TYPO.caption,
+    fontWeight: '600',
+  },
+  eyeButton: {
+    padding: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modeSelector: {
+    marginTop: 24,
+    marginBottom: 32,
+  },
+  modeButton: {
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  modeIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  modeButtonText: {
+    ...TYPO.h3,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modeButtonSubtext: {
+    ...TYPO.body,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   generateContainer: {
     flex: 1,
   },
   form: {
     flex: 1,
+  },
+  formContent: {
     paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 100,
   },
-  inputGroup: {
-    marginBottom: 24,
+  formHeader: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 12,
-    fontFamily: 'Inter-SemiBold',
+  formHeaderContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  input: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    padding: 16,
-    fontSize: 16,
-    color: '#FFFFFF',
+  formHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  formIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  formHeaderText: {
+    flex: 1,
+  },
+  formTitle: {
+    ...TYPO.h2,
+    marginBottom: 4,
+  },
+  formSubtitle: {
+    ...TYPO.caption,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  formBody: {
+    gap: 16,
+  },
+  formSection: {
+    borderRadius: 20,
+    padding: 20,
     borderWidth: 1,
-    borderColor: '#2A2A2A',
-    fontFamily: 'Inter-Regular',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  sectionTitle: {
+    ...TYPO.h3,
+  },
+  amountInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  currencySymbol: {
+    ...TYPO.h2,
+    marginRight: 8,
+  },
+  amountInput: {
+    flex: 1,
+    ...TYPO.h1,
+    textAlign: 'center',
   },
   quickAmounts: {
     flexDirection: 'row',
-    marginTop: 12,
     gap: 8,
   },
   quickAmountButton: {
     flex: 1,
-    backgroundColor: 'rgba(0, 230, 118, 0.1)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#00E676',
     alignItems: 'center',
   },
   quickAmountText: {
-    fontSize: 12,
-    color: '#00E676',
-    fontFamily: 'Inter-Medium',
+    ...TYPO.caption,
+    fontWeight: '600',
+  },
+  inputContainer: {
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+  },
+  input: {
+    ...TYPO.body,
+  },
+  textArea: {
+    ...TYPO.body,
+    height: 80,
+    textAlignVertical: 'top',
   },
   generateButton: {
     borderRadius: 16,
     overflow: 'hidden',
-    marginTop: 20,
+    marginTop: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
   buttonGradient: {
-    padding: 16,
+    padding: 20,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   generateButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
-    fontFamily: 'Inter-SemiBold',
-  },
-  qrContainer: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  qrTitle: {
-    fontSize: 18,
+    ...TYPO.body,
     fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 8,
-    fontFamily: 'Inter-SemiBold',
+  },
+  qrContainer: {
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  qrHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  qrIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  qrTitle: {
+    ...TYPO.h2,
+    textAlign: 'center',
+  },
+  qrDetails: {
+    alignItems: 'center',
+    marginBottom: 24,
   },
   qrAmount: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#00E676',
-    fontFamily: 'Inter-Bold',
+    ...TYPO.h1,
+    marginBottom: 8,
   },
   qrDescription: {
-    fontSize: 14,
-    color: '#CCCCCC',
-    marginBottom: 20,
-    fontFamily: 'Inter-Regular',
+    ...TYPO.body,
+    textAlign: 'center',
   },
   qrCodeWrapper: {
     marginVertical: 20,
     padding: 20,
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 12,
+    alignSelf: 'center',
   },
   qrInstructions: {
-    fontSize: 14,
-    color: '#CCCCCC',
+    marginVertical: 20,
+  },
+  qrInstructionsText: {
+    ...TYPO.body,
     textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 20,
-    paddingHorizontal: 20,
-    fontFamily: 'Inter-Regular',
     lineHeight: 20,
   },
   newQrButton: {
-    backgroundColor: 'rgba(0, 230, 118, 0.1)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#00E676',
+    gap: 8,
   },
   newQrButtonText: {
-    fontSize: 14,
-    color: '#00E676',
+    ...TYPO.caption,
     fontWeight: '600',
-    fontFamily: 'Inter-SemiBold',
   },
   errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginTop: 8,
+    paddingHorizontal: 4,
   },
   errorText: {
-    fontSize: 16,
-    color: '#F44336',
-    fontFamily: 'Inter-Regular',
-  },
-  modeSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 20,
-  },
-  modeButton: {
-    flex: 1,
-    padding: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
-    alignItems: 'center',
-  },
-  modeButtonGradient: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  modeIconContainer: {
-    padding: 12,
-    borderRadius: 12,
-  },
-  modeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginTop: 8,
-    fontFamily: 'Inter-SemiBold',
-  },
-  modeButtonSubtext: {
-    fontSize: 12,
-    color: '#CCCCCC',
-    fontFamily: 'Inter-Regular',
-  },
-  formHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    fontFamily: 'Inter-SemiBold',
-  },
-  closeButton: {
-    padding: 8,
+    ...TYPO.caption,
+    fontStyle: 'italic',
   },
 });

@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { WalletService } from '@/services/WalletService';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import Logo from '@/components/Logo';
 
 export default function IndexScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const { colors } = useThemeColors();
 
   useEffect(() => {
     checkAuthStatus();
@@ -28,13 +31,14 @@ export default function IndexScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>OffliPay</Text>
-      <Text style={styles.subtitle}>Offline Payment System</Text>
+    <View style={[styles.container, { backgroundColor: colors.BACKGROUND }]}>
+      <Logo size={120} style={styles.logo} />
+     
+      <Text style={[styles.subtitle, { color: colors.TEXT }]}>Offline Payment System</Text>
       {loading && (
         <ActivityIndicator 
           size="large" 
-          color="#00E676" 
+          color={colors.PRIMARY} 
           style={styles.loader}
         />
       )}
@@ -47,19 +51,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1A1A1A',
     paddingHorizontal: 20,
+  },
+  logo: {
+    marginBottom: 24,
   },
   title: {
     fontSize: 48,
     fontWeight: '700',
-    color: '#00E676',
     marginBottom: 8,
     fontFamily: 'Inter-Bold',
   },
   subtitle: {
     fontSize: 18,
-    color: '#FFFFFF',
     marginBottom: 32,
     fontFamily: 'Inter-Regular',
   },

@@ -1,245 +1,249 @@
-# OffliPay 📱💳
+# OffliPay - Application de Paiement Mobile
 
-**Une application de portefeuille numérique offline pour les paiements par QR code**
+Une application React Native moderne pour les paiements mobiles avec support hors ligne, QR codes et gestion de portefeuille.
 
-OffliPay est une application mobile React Native/Expo qui permet d'effectuer des paiements sécurisés sans connexion internet, en utilisant des codes QR et des technologies de synchronisation offline.
+## 🚀 Fonctionnalités
 
-## 🌟 Fonctionnalités Principales
+### Core
+- **Paiements QR** : Génération et scan de QR codes pour les transactions
+- **Portefeuille sécurisé** : Gestion des soldes et transactions
+- **Mode hors ligne** : Fonctionnement complet sans connexion internet
+- **Thème adaptatif** : Support des modes clair/sombre/auto
+- **Interface responsive** : Optimisée pour mobile et tablette
 
-### 💰 Gestion de Portefeuille
-- **Création de portefeuille sécurisé** avec cryptographie RSA
-- **Gestion du solde** en temps réel
-- **Historique des transactions** détaillé
-- **Mode acheteur/vendeur** pour différents contextes d'utilisation
+### Cash-In (Ajout de fonds)
+- **Agents** : Paiement via réseau d'agents physiques
+- **Vouchers prépayés** : Codes QR pour recharges
+- **Intégration bancaire** : Transferts bancaires directs
+- **Calcul automatique des frais** : Selon la méthode choisie
+- **Validation en temps réel** : Contrôles de sécurité
 
-### 📱 Paiements par QR Code
-- **Génération de QR codes** pour les demandes de paiement
-- **Scanner de QR codes** pour effectuer des paiements
-- **Transactions sécurisées** avec signatures cryptographiques
-- **Validation automatique** des paiements
+### Transactions
+- **Historique complet** : Toutes les transactions avec filtres
+- **Détails enrichis** : Informations détaillées par transaction
+- **Partage** : Export et partage des relevés
+- **Recherche** : Recherche par description ou ID
+- **Statistiques** : Totaux envoyés/reçus
 
-### 🔒 Sécurité
-- **Cryptographie RSA** pour les signatures de transactions
-- **Stockage sécurisé** des clés privées
-- **Hachage sécurisé** des codes PIN
-- **Validation des signatures** pour prévenir la fraude
+## 🏗️ Architecture
 
-### 📊 Interface Utilisateur
-- **Design moderne** avec thème sombre
-- **Interface intuitive** avec navigation par onglets
-- **Animations fluides** et feedback haptique
-- **Responsive design** pour différentes tailles d'écran
-
-## 🏗️ Architecture Technique
-
-### Stack Technologique
-- **Frontend**: React Native avec Expo
-- **Navigation**: Expo Router avec navigation par onglets
-- **Base de données**: SQLite avec expo-sqlite
-- **Cryptographie**: expo-crypto
-- **Stockage sécurisé**: expo-secure-store
-- **QR Codes**: react-native-qrcode-svg
-- **Scanner QR**: expo-camera avec expo-barcode-scanner
-- **UI Components**: Lucide React Native
-- **Styles**: StyleSheet natif avec LinearGradient
-
-### Structure du Projet
+### Structure des composants
 ```
-offlipay/
-├── app/                    # Pages de l'application (Expo Router)
-│   ├── (tabs)/            # Navigation par onglets
-│   │   ├── index.tsx      # Écran d'accueil
-│   │   ├── pay.tsx        # Écran de paiement
-│   │   ├── transactions.tsx # Historique des transactions
-│   │   └── settings.tsx   # Paramètres
-│   ├── auth/              # Authentification
-│   └── _layout.tsx        # Layout principal
-├── components/            # Composants réutilisables
-│   ├── QRGenerator.tsx    # Générateur de QR codes
-│   ├── QRScanner.tsx      # Scanner de QR codes
-│   └── TransactionItem.tsx # Élément de transaction
-├── services/              # Services métier
-│   └── WalletService.ts   # Service de gestion du portefeuille
-├── utils/                 # Utilitaires
-│   ├── crypto.ts          # Fonctions cryptographiques
-│   ├── storage.ts         # Service de stockage
-│   └── secureStorage.ts   # Stockage sécurisé
-├── types/                 # Définitions TypeScript
-│   └── index.ts           # Interfaces et types
-└── hooks/                 # Hooks personnalisés
-    └── useFrameworkReady.ts
+components/
+├── ui/                    # Composants UI réutilisables
+│   ├── ModalContainer.tsx
+│   ├── SectionCard.tsx
+│   ├── AmountInput.tsx
+│   ├── SelectionCard.tsx
+│   └── ActionButton.tsx
+├── cash-in/              # Composants spécifiques cash-in
+│   ├── MethodSelector.tsx
+│   ├── AgentList.tsx
+│   ├── VoucherInput.tsx
+│   └── BankAccountList.tsx
+└── [autres composants]
 ```
 
-## 🚀 Installation et Configuration
+### Hooks personnalisés
+```
+hooks/
+├── useCashInValidation.ts    # Validation des formulaires cash-in
+├── useCashInFees.ts          # Calcul des frais
+├── useCustomAlert.ts         # Gestion des alertes
+├── useThemeColors.ts         # Gestion du thème
+└── useUserMode.ts           # Mode utilisateur (acheteur/vendeur)
+```
+
+### Services
+```
+services/
+├── CashInService.ts          # Logique métier cash-in
+├── WalletService.ts          # Gestion du portefeuille
+└── [autres services]
+```
+
+## 🧪 Tests
+
+### Tests unitaires
+```bash
+# Lancer tous les tests
+npm test
+
+# Tests avec couverture
+npm run test:coverage
+
+# Tests en mode watch
+npm run test:watch
+```
+
+### Structure des tests
+```
+__tests__/
+├── components/
+│   ├── ui/
+│   │   ├── ModalContainer.test.tsx
+│   │   ├── AmountInput.test.tsx
+│   │   └── [autres tests composants]
+│   └── [tests autres composants]
+├── hooks/
+│   ├── useCashInValidation.test.ts
+│   ├── useCashInFees.test.ts
+│   └── [autres tests hooks]
+└── services/
+    ├── CashInService.test.ts
+    ├── WalletService.test.ts
+    └── [autres tests services]
+```
+
+### Exemples d'utilisation
+```
+examples/
+├── CashInModalExample.tsx    # Exemple d'utilisation du modal cash-in
+├── ComponentExamples.tsx     # Démonstration des composants UI
+└── HookExamples.tsx          # Exemples d'utilisation des hooks
+```
+
+## 📱 Installation
 
 ### Prérequis
-- Node.js (version 18 ou supérieure)
+- Node.js 18+
 - npm ou yarn
 - Expo CLI
-- Un appareil mobile ou émulateur
+- Android Studio (pour Android)
+- Xcode (pour iOS, macOS uniquement)
 
 ### Installation
-
-1. **Cloner le repository**
 ```bash
-git clone <repository-url>
+# Cloner le repository
+git clone https://github.com/votre-username/offlipay.git
 cd offlipay
-```
 
-2. **Installer les dépendances**
-```bash
+# Installer les dépendances
 npm install
+
+# Démarrer l'application
+npm start
 ```
 
-3. **Démarrer l'application**
+### Configuration
+1. Copier `.env.example` vers `.env`
+2. Configurer les variables d'environnement
+3. Configurer les clés API si nécessaire
+
+## 🗄️ Base de données
+
+### Tables principales
+- **users** : Utilisateurs et portefeuilles
+- **transactions** : Historique des transactions
+- **balances** : Soldes utilisateurs (nouvelle table)
+- **cash_in_transactions** : Transactions d'ajout de fonds
+- **agents** : Réseau d'agents
+- **vouchers** : Codes prépayés
+- **bank_accounts** : Comptes bancaires
+
+### Migration vers la table balances
+La nouvelle table `balances` permet une gestion plus fine des soldes :
+```sql
+CREATE TABLE balances (
+  user_id TEXT PRIMARY KEY,
+  current_balance REAL DEFAULT 0,
+  pending_balance REAL DEFAULT 0,
+  last_update TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
+## 🔧 Développement
+
+### Scripts disponibles
 ```bash
-# Pour Windows (modifié pour éviter les problèmes de variables d'environnement)
-npm run dev
-
-# Ou utiliser npx
-npx expo start
+npm start          # Démarrer l'application
+npm run android    # Lancer sur Android
+npm run ios        # Lancer sur iOS
+npm run web        # Lancer sur web
+npm test           # Lancer les tests
+npm run lint       # Vérifier le code
+npm run type-check # Vérifier les types TypeScript
 ```
 
-4. **Scanner le QR code** avec l'application Expo Go sur votre mobile
+### Conventions de code
+- **TypeScript** : Utilisation stricte des types
+- **ESLint** : Règles de code automatiques
+- **Prettier** : Formatage automatique
+- **Husky** : Hooks Git pour la qualité
 
-### Configuration pour le Développement
+### Structure des commits
+```
+feat: nouvelle fonctionnalité
+fix: correction de bug
+docs: documentation
+style: formatage
+refactor: refactorisation
+test: ajout/modification de tests
+chore: tâches de maintenance
+```
 
-Le projet utilise Expo avec les configurations suivantes :
-- **Metro bundler** pour le développement
-- **TypeScript** pour la sécurité des types
-- **ESLint** pour la qualité du code
-- **Prettier** pour le formatage
+## 🚀 Déploiement
 
-## 📱 Utilisation de l'Application
-
-### Création d'un Portefeuille
-1. Ouvrir l'application
-2. Choisir "Créer un nouveau portefeuille"
-3. Saisir nom, téléphone et code PIN
-4. Le portefeuille est créé avec un ID unique
-
-### Effectuer un Paiement
-1. Aller dans l'onglet "Pay"
-2. Choisir "Scanner QR" pour payer
-3. Scanner le QR code du destinataire
-4. Confirmer le montant et la description
-5. Le paiement est traité et le solde mis à jour
-
-### Générer un QR de Paiement
-1. Aller dans l'onglet "Pay"
-2. Choisir "Générer QR"
-3. Saisir le montant et l'ID du portefeuille destinataire
-4. Le QR code est généré pour être partagé
-
-### Consulter l'Historique
-1. Aller dans l'onglet "History"
-2. Voir toutes les transactions envoyées et reçues
-3. Filtrer par type et statut
-4. Voir les détails de chaque transaction
-
-## 🔧 Fonctionnalités Techniques
-
-### Cryptographie
-- **Génération de clés RSA** pour chaque portefeuille
-- **Signatures de transactions** pour l'authenticité
-- **Hachage sécurisé** des codes PIN
-- **Validation cryptographique** des paiements
-
-### Stockage
-- **SQLite local** pour les données utilisateur et transactions
-- **Stockage sécurisé** pour les clés privées et codes PIN
-- **Synchronisation offline** préparée pour les futures fonctionnalités
-
-### Sécurité des Transactions
-- **Nonces uniques** pour chaque transaction
-- **Horodatage** pour prévenir les attaques par rejeu
-- **Validation des signatures** avant traitement
-- **Vérification des soldes** avant paiement
-
-## 🎨 Design et UX
-
-### Thème
-- **Thème sombre** moderne et élégant
-- **Couleur principale** : Vert (#00E676) pour les actions
-- **Typographie** : Inter font family
-- **Gradients** pour les éléments visuels
-
-### Navigation
-- **Navigation par onglets** intuitive
-- **4 onglets principaux** : Home, Pay, History, Settings
-- **Transitions fluides** entre les écrans
-- **Feedback haptique** pour les interactions
-
-## 🔮 Fonctionnalités Futures
-
-### Synchronisation Offline
-- **Synchronisation Bluetooth** entre appareils
-- **Synchronisation SMS** pour les zones sans réseau
-- **Synchronisation WiFi** pour les réseaux locaux
-- **Gestion des conflits** de synchronisation
-
-### Améliorations Sécurité
-- **Chiffrement end-to-end** des transactions
-- **Authentification biométrique** (empreinte, Face ID)
-- **Backup sécurisé** des portefeuilles
-- **Récupération de portefeuille** avec phrases de récupération
-
-### Fonctionnalités Avancées
-- **Multi-devices** : utiliser le même portefeuille sur plusieurs appareils
-- **Notifications push** pour les transactions
-- **Export des données** en PDF/CSV
-- **Intégration avec des services tiers**
-
-## 🐛 Dépannage
-
-### Problèmes Courants
-
-**Erreur "EXPO_NO_TELEMETRY n'est pas reconnu"**
+### Build de production
 ```bash
-# Solution : Modifier le script dans package.json
-"dev": "expo start"
+# Android
+eas build --platform android
+
+# iOS
+eas build --platform ios
+
+# Web
+npm run build:web
 ```
 
-**Expo CLI non reconnu**
-```bash
-# Installer Expo CLI globalement
-npm install -g @expo/cli
+### Configuration EAS
+```json
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {}
+  }
+}
 ```
 
-**Problèmes de permissions caméra**
-- Vérifier les permissions dans les paramètres de l'appareil
-- Redémarrer l'application après avoir accordé les permissions
+## 📚 Documentation
 
-### Logs et Debug
-```bash
-# Voir les logs en temps réel
-npx expo start --clear
+### Guides
+- [Guide d'installation](docs/Installation.md)
+- [Architecture](docs/Architecture.md)
+- [API Reference](docs/API.md)
+- [Tests](docs/Tests.md)
 
-# Mode debug
-npx expo start --dev-client
-```
-
-## 📄 Licence
-
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
+### Composants
+- [CashInModal](docs/CashInModal.md)
+- [Composants UI](docs/UIComponents.md)
+- [Hooks](docs/Hooks.md)
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! Pour contribuer :
-
 1. Fork le projet
-2. Créer une branche pour votre fonctionnalité
-3. Commiter vos changements
-4. Pousser vers la branche
+2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Commit les changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
 5. Ouvrir une Pull Request
 
-## 📞 Support
+## 📄 Licence
 
-Pour toute question ou problème :
-- Ouvrir une issue sur GitHub
-- Consulter la documentation Expo
-- Vérifier les logs de l'application
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+## 🆘 Support
+
+- **Issues** : [GitHub Issues](https://github.com/votre-username/offlipay/issues)
+- **Documentation** : [Wiki](https://github.com/votre-username/offlipay/wiki)
+- **Discussions** : [GitHub Discussions](https://github.com/votre-username/offlipay/discussions)
 
 ---
 
-**OffliPay** - Paiements sécurisés, même sans réseau 🌐➡️📱 
+Développé avec ❤️ par l'équipe OffliPay 

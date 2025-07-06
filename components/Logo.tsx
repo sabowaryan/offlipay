@@ -1,6 +1,7 @@
 import React from 'react';
-import { Image, ImageStyle, useColorScheme } from 'react-native';
+import { Image, ImageStyle } from 'react-native';
 import { LOGOS } from '@/utils/logo';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface LogoProps {
   compact?: boolean;
@@ -9,10 +10,10 @@ interface LogoProps {
 }
 
 export default function Logo({ compact = false, size = 64, style }: LogoProps) {
-  const scheme = useColorScheme();
+  const { theme } = useThemeColors();
   const logo = compact
-    ? (scheme === 'dark' ? LOGOS.compact_dark : LOGOS.compact_light)
-    : (scheme === 'dark' ? LOGOS.dark : LOGOS.light);
+    ? (theme === 'dark' ? LOGOS.compact_dark : LOGOS.compact_light)
+    : (theme === 'dark' ? LOGOS.dark : LOGOS.light);
 
   return (
     <Image

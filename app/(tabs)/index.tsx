@@ -34,9 +34,11 @@ import {
   Settings,
   CreditCard,
   Smartphone,
-  Zap
+  Zap,
+  CheckCircle
 } from 'lucide-react-native';
 import TransactionItem from '@/components/TransactionItem';
+import TransactionDetailsModal from '@/components/TransactionDetailsModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserMode } from '@/hooks/useUserMode';
@@ -44,6 +46,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { TYPO } from '@/utils/typography';
 import Logo from '@/components/Logo';
 import * as Clipboard from 'expo-clipboard';
+import CashInModal from '@/components/CashInModal';
 
 const { width } = Dimensions.get('window');
 
@@ -57,10 +60,16 @@ export default function HomeScreen() {
   const { userMode, toggleUserMode } = useUserMode();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [showTransactionDetails, setShowTransactionDetails] = useState(false);
+  const [showCashInModal, setShowCashInModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [copiedWalletId, setCopiedWalletId] = useState(false);
 
   useEffect(() => {
     loadUserData();
+    // Initialize test data for cash-in system
+    WalletService.initializeTestData();
   }, []);
 
   const loadUserData = async () => {
@@ -85,26 +94,12 @@ export default function HomeScreen() {
   };
 
   const handleAddMoney = () => {
-    Alert.alert(
-      'Ajouter des fonds',
-      'Combien souhaitez-vous ajouter à votre wallet ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: '10€', onPress: () => addMoney(10) },
-        { text: '50€', onPress: () => addMoney(50) },
-        { text: '100€', onPress: () => addMoney(100) },
-      ]
-    );
+    setShowCashInModal(true);
   };
 
-  const addMoney = async (amount: number) => {
-    try {
-      await WalletService.addMoney(amount);
-      await loadUserData();
-      Alert.alert('Succès', `${amount}€ ajoutés à votre wallet !`);
-    } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Échec de l\'ajout de fonds');
-    }
+  const handleCashInSuccess = async (amount: number) => {
+    await loadUserData();
+    Alert.alert('Succès', `${amount}€ ajoutés à votre wallet !`);
   };
 
   const formatBalance = (balance: number) => {
@@ -119,7 +114,8 @@ export default function HomeScreen() {
     if (user) {
       try {
         await Clipboard.setStringAsync(user.walletId);
-        Alert.alert('Copié', 'ID Wallet copié dans le presse-papiers');
+        setCopiedWalletId(true);
+        setTimeout(() => setCopiedWalletId(false), 2000);
       } catch (error) {
         Alert.alert('Erreur', 'Impossible de copier l\'ID wallet');
       }
@@ -150,6 +146,11 @@ export default function HomeScreen() {
       pathname: '/(tabs)/pay',
       params: { mode: 'seller' }
     });
+  };
+
+  const handleTransactionPress = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setShowTransactionDetails(true);
   };
 
   if (loading) {
@@ -194,9 +195,9 @@ export default function HomeScreen() {
         colors={[COLORS.PRIMARY, COLORS.PRIMARY_LIGHT]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.headerGradient, { paddingTop: insets.top + 8 }]}
+        style={[styles.headerGradient, { paddingTop: insets.top - 8 }]}
       >
-        <View style={styles.headerContent}>
+        <View style={[styles.headerContent, { paddingTop: -16 }]}>
           <View style={styles.headerTop}>
             <View style={styles.userInfo}>
               <View style={[styles.avatarContainer, { backgroundColor: COLORS.WHITE + '20' }]}>
@@ -255,7 +256,11 @@ export default function HomeScreen() {
                   {user.walletId.substring(0, 16)}...
                 </Text>
                 <TouchableOpacity onPress={copyWalletId} style={styles.copyButton}>
-                  <Copy size={14} color={COLORS.WHITE} />
+                  {copiedWalletId ? (
+                    <CheckCircle size={14} color={COLORS.SUCCESS} />
+                  ) : (
+                    <Copy size={14} color={COLORS.WHITE} />
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -402,18 +407,27 @@ export default function HomeScreen() {
                 <TransactionItem
                   key={transaction.id}
                   transaction={transaction}
-                  onPress={() => {
-                    Alert.alert(
-                      'Détails de la transaction',
-                      `Montant: ${transaction.amount}€\nDescription: ${transaction.description}\nStatut: ${transaction.status}`
-                    );
-                  }}
+                  onPress={() => handleTransactionPress(transaction)}
                 />
               ))}
             </View>
           )}
         </View>
       </ScrollView>
+
+      {/* Transaction Details Modal */}
+      <TransactionDetailsModal
+        visible={showTransactionDetails}
+        transaction={selectedTransaction}
+        onClose={() => setShowTransactionDetails(false)}
+      />
+
+      {/* Cash In Modal */}
+      <CashInModal
+        visible={showCashInModal}
+        onClose={() => setShowCashInModal(false)}
+        onSuccess={handleCashInSuccess}
+      />
     </SafeAreaView>
   );
 }
@@ -427,7 +441,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 32,
+    paddingBottom: 200,
   },
   loadingContainer: {
     flex: 1,
@@ -453,7 +467,7 @@ const styles = StyleSheet.create({
   },
   headerGradient: {
     paddingHorizontal: 20,
-    paddingBottom: 24,
+    paddingBottom: 16,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
     shadowColor: '#000',
@@ -471,7 +485,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   userInfo: {
     flexDirection: 'row',

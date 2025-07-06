@@ -279,4 +279,98 @@ export class WalletService {
   static setCurrentUserMode(mode: 'buyer' | 'seller'): void {
     this.currentUserMode = mode;
   }
+
+  // Initialize test data for cash-in system
+  static async initializeTestData(): Promise<void> {
+    try {
+      // Add test agents
+      const testAgents = [
+        {
+          id: 'agent_001',
+          name: 'Agence Centre-Ville',
+          location: 'Ouagadougou, Centre',
+          phone: '+226 70 12 34 56',
+          publicKey: 'test_public_key_agent_001',
+          isActive: true,
+          maxAmount: 5000,
+          dailyLimit: 50000,
+          commission: 0.01,
+          createdAt: new Date()
+        },
+        {
+          id: 'agent_002',
+          name: 'Point Service Marché',
+          location: 'Ouagadougou, Marché Central',
+          phone: '+226 70 23 45 67',
+          publicKey: 'test_public_key_agent_002',
+          isActive: true,
+          maxAmount: 3000,
+          dailyLimit: 30000,
+          commission: 0.01,
+          createdAt: new Date()
+        },
+        {
+          id: 'agent_003',
+          name: 'Agence Zone 4',
+          location: 'Ouagadougou, Zone 4',
+          phone: '+226 70 34 56 78',
+          publicKey: 'test_public_key_agent_003',
+          isActive: true,
+          maxAmount: 4000,
+          dailyLimit: 40000,
+          commission: 0.01,
+          createdAt: new Date()
+        }
+      ];
+
+      for (const agent of testAgents) {
+        await StorageService.saveAgent(agent);
+      }
+
+      // Add test vouchers
+      const testVouchers = [
+        {
+          id: 'voucher_001',
+          code: 'PP-2025-001',
+          amount: 1000,
+          currency: 'XOF',
+          isUsed: false,
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+          signature: 'test_signature_voucher_001',
+          series: '2025-A',
+          createdAt: new Date()
+        },
+        {
+          id: 'voucher_002',
+          code: 'PP-2025-002',
+          amount: 2500,
+          currency: 'XOF',
+          isUsed: false,
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          signature: 'test_signature_voucher_002',
+          series: '2025-A',
+          createdAt: new Date()
+        },
+        {
+          id: 'voucher_003',
+          code: 'PP-2025-003',
+          amount: 5000,
+          currency: 'XOF',
+          isUsed: false,
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          signature: 'test_signature_voucher_003',
+          series: '2025-A',
+          createdAt: new Date()
+        }
+      ];
+
+      for (const voucher of testVouchers) {
+        await StorageService.saveVoucher(voucher);
+      }
+
+      console.log('Test data initialized successfully');
+    } catch (error) {
+      console.error('Error initializing test data:', error);
+    }
+  }
 }

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "OffliPay",
-    "slug": "offliPay",
+    "slug": "offlipay",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/AppIcons/1024.png",
@@ -25,14 +25,31 @@
       "output": "single",
       "favicon": "./assets/images/AppIcons/Assets.xcassets/AppIcon.appiconset/1024.png"
     },
-    "plugins": ["expo-router", "expo-font", "expo-web-browser"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "offlipay",
+          "organization": "stelm-technologies"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "expo-router": {
         "appRoot": "app"
+      },
+      "router": {},
+      "eas": {
+        "projectId": "d7a567cd-c15d-4ee3-aa03-81fb41fb21a9"
       }
-    }
+    },
+    "owner": "albatros01"
   }
 }

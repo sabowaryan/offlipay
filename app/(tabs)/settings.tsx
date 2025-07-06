@@ -11,7 +11,8 @@ import {
   Share,
   StatusBar,
   Dimensions,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { WalletService } from '@/services/WalletService';
@@ -52,6 +53,7 @@ export default function SettingsScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [syncEnabled, setSyncEnabled] = useState(false);
   const [offlineMode, setOfflineMode] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [sessionInfo, setSessionInfo] = useState({
     lastLogin: '',
     deviceInfo: '',
@@ -63,6 +65,7 @@ export default function SettingsScreen() {
   }, []);
 
   const loadUserData = async () => {
+    setIsLoading(true);
     const currentUser = WalletService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
@@ -80,6 +83,7 @@ export default function SettingsScreen() {
         walletBalance: currentUser.balance,
       });
     }
+    setIsLoading(false);
   };
 
   const handleLogout = () => {
@@ -248,6 +252,17 @@ export default function SettingsScreen() {
       </TouchableOpacity>
     );
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: COLORS.BACKGROUND }]}>
+        <StatusBar barStyle={systemTheme === 'dark' ? 'light-content' : 'dark-content'} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!user) {
     return (
@@ -690,5 +705,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 16,
     fontFamily: 'Inter-Regular',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
