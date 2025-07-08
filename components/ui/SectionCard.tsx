@@ -1,16 +1,16 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { LucideIcon } from 'lucide-react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TYPO } from '@/utils/typography';
 
 interface SectionCardProps {
-  icon: LucideIcon;
+  icon: React.ComponentType<{ size?: number; color?: string }>;
   iconColor?: string;
   title: string;
   children: React.ReactNode;
   backgroundColor?: string;
   borderColor?: string;
+  style?: ViewStyle;
 }
 
 export default function SectionCard({
@@ -20,9 +20,9 @@ export default function SectionCard({
   children,
   backgroundColor,
   borderColor,
+  style,
 }: SectionCardProps) {
   const { colors: COLORS } = useThemeColors();
-  
   const defaultIconColor = iconColor || COLORS.PRIMARY;
   const defaultBackgroundColor = backgroundColor || COLORS.CARD;
   const defaultBorderColor = borderColor || COLORS.GRAY_LIGHT;
@@ -31,17 +31,15 @@ export default function SectionCard({
     <View
       style={[
         styles.container,
-        {
-          backgroundColor: defaultBackgroundColor,
-          borderColor: defaultBorderColor,
-        },
+        { backgroundColor: defaultBackgroundColor, borderColor: defaultBorderColor },
+        style,
       ]}
+      accessible
+      accessibilityRole="summary"
     >
       <View style={styles.header}>
         <Icon size={20} color={defaultIconColor} />
-        <Text style={[styles.title, { color: COLORS.TEXT }]}>
-          {title}
-        </Text>
+        <Text style={[styles.title, { color: COLORS.TEXT }]}>{title}</Text>
       </View>
       <View style={styles.content}>{children}</View>
     </View>
@@ -58,17 +56,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+    width: '100%',
+    marginBottom: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
-    gap: 12,
   },
   title: {
     ...TYPO.h3,
+    marginLeft: 12,
+    flex: 1,
   },
   content: {
-    gap: 12,
+    // marges internes gérées par les enfants
   },
 }); 

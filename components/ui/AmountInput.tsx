@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TextInput, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TYPO } from '@/utils/typography';
 
@@ -11,6 +11,7 @@ interface AmountInputProps {
   currency?: string;
   quickAmounts?: number[];
   onQuickAmountPress?: (amount: number) => void;
+  style?: ViewStyle;
 }
 
 export default function AmountInput({
@@ -21,6 +22,7 @@ export default function AmountInput({
   currency = '€',
   quickAmounts = [10, 25, 50, 100],
   onQuickAmountPress,
+  style,
 }: AmountInputProps) {
   const { colors: COLORS } = useThemeColors();
 
@@ -30,7 +32,7 @@ export default function AmountInput({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <View
         style={[
           styles.inputContainer,
@@ -40,9 +42,7 @@ export default function AmountInput({
           },
         ]}
       >
-        <Text style={[styles.currencySymbol, { color: COLORS.GRAY_MEDIUM }]}>
-          {currency}
-        </Text>
+        <Text style={[styles.currencySymbol, { color: COLORS.GRAY_MEDIUM }]}>{currency}</Text>
         <TextInput
           style={[styles.input, { color: COLORS.TEXT }]}
           value={value}
@@ -51,20 +51,20 @@ export default function AmountInput({
           placeholderTextColor={COLORS.GRAY_MEDIUM}
           keyboardType="numeric"
           textAlign="center"
+          accessible
+          accessibilityLabel="Montant à ajouter"
         />
       </View>
 
       {error && (
         <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, { color: COLORS.ERROR }]}>
-            {error}
-          </Text>
+          <Text style={[styles.errorText, { color: COLORS.ERROR }]}>{error}</Text>
         </View>
       )}
 
       {quickAmounts.length > 0 && (
         <View style={styles.quickAmountsContainer}>
-          {quickAmounts.map((amount) => (
+          {quickAmounts.map((amount, idx) => (
             <TouchableOpacity
               key={amount}
               style={[
@@ -75,9 +75,14 @@ export default function AmountInput({
                       ? COLORS.PRIMARY
                       : COLORS.PRIMARY + '15',
                   borderColor: COLORS.PRIMARY,
+                  marginRight: idx !== quickAmounts.length - 1 ? 8 : 0,
                 },
               ]}
               onPress={() => handleQuickAmountPress(amount)}
+              activeOpacity={0.85}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`Ajouter ${amount}${currency}`}
             >
               <Text
                 style={[
@@ -88,7 +93,7 @@ export default function AmountInput({
                   },
                 ]}
               >
-                {amount}€
+                {amount}{currency}
               </Text>
             </TouchableOpacity>
           ))}
@@ -100,7 +105,8 @@ export default function AmountInput({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 12,
+    width: '100%',
+    marginBottom: 16,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -109,6 +115,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderWidth: 1,
+    marginBottom: 12,
   },
   currencySymbol: {
     ...TYPO.h2,
@@ -121,6 +128,7 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     paddingHorizontal: 4,
+    marginBottom: 8,
   },
   errorText: {
     ...TYPO.caption,
@@ -128,7 +136,7 @@ const styles = StyleSheet.create({
   },
   quickAmountsContainer: {
     flexDirection: 'row',
-    gap: 8,
+    marginTop: 8,
   },
   quickAmountButton: {
     flex: 1,

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { QrCode, Scan } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TYPO } from '@/utils/typography';
@@ -15,6 +15,7 @@ interface VoucherInputProps {
     currency: string;
     isValid: boolean;
   };
+  style?: ViewStyle;
 }
 
 export default function VoucherInput({
@@ -23,6 +24,7 @@ export default function VoucherInput({
   onScanVoucher,
   error,
   voucherInfo,
+  style,
 }: VoucherInputProps) {
   const { colors: COLORS } = useThemeColors();
 
@@ -31,12 +33,10 @@ export default function VoucherInput({
       icon={QrCode}
       iconColor={COLORS.SUCCESS}
       title="Voucher Prépayé"
+      style={style}
     >
       <View style={styles.container}>
-        <Text style={[styles.description, { color: COLORS.GRAY_MEDIUM }]}>
-          Entrez le code du voucher ou scannez le QR code
-        </Text>
-
+        <Text style={[styles.description, { color: COLORS.GRAY_MEDIUM }]}>Entrez le code du voucher ou scannez le QR code</Text>
         <View style={styles.inputContainer}>
           <View
             style={[
@@ -55,31 +55,30 @@ export default function VoucherInput({
               placeholderTextColor={COLORS.GRAY_MEDIUM}
               autoCapitalize="characters"
               autoCorrect={false}
+              accessible
+              accessibilityLabel="Code du voucher"
             />
           </View>
-
           <TouchableOpacity
             style={[styles.scanButton, { backgroundColor: COLORS.SUCCESS + '15' }]}
             onPress={onScanVoucher}
+            activeOpacity={0.85}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Scanner un voucher"
           >
             <Scan size={20} color={COLORS.SUCCESS} />
           </TouchableOpacity>
         </View>
-
         {error && (
-          <Text style={[styles.errorText, { color: COLORS.ERROR }]}>
-            {error}
-          </Text>
+          <Text style={[styles.errorText, { color: COLORS.ERROR }]}>{error}</Text>
         )}
-
         {voucherInfo && (
           <View
             style={[
               styles.voucherInfo,
               {
-                backgroundColor: voucherInfo.isValid
-                  ? COLORS.SUCCESS + '15'
-                  : COLORS.ERROR + '15',
+                backgroundColor: voucherInfo.isValid ? COLORS.SUCCESS + '15' : COLORS.ERROR + '15',
                 borderColor: voucherInfo.isValid ? COLORS.SUCCESS : COLORS.ERROR,
               },
             ]}
@@ -87,9 +86,7 @@ export default function VoucherInput({
             <Text
               style={[
                 styles.voucherAmount,
-                {
-                  color: voucherInfo.isValid ? COLORS.SUCCESS : COLORS.ERROR,
-                },
+                { color: voucherInfo.isValid ? COLORS.SUCCESS : COLORS.ERROR },
               ]}
             >
               {voucherInfo.amount} {voucherInfo.currency}
@@ -97,9 +94,7 @@ export default function VoucherInput({
             <Text
               style={[
                 styles.voucherStatus,
-                {
-                  color: voucherInfo.isValid ? COLORS.SUCCESS : COLORS.ERROR,
-                },
+                { color: voucherInfo.isValid ? COLORS.SUCCESS : COLORS.ERROR },
               ]}
             >
               {voucherInfo.isValid ? 'Voucher valide' : 'Voucher invalide'}
@@ -113,15 +108,16 @@ export default function VoucherInput({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    width: '100%',
   },
   description: {
     ...TYPO.body,
     lineHeight: 20,
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
-    gap: 12,
+    marginBottom: 12,
   },
   inputWrapper: {
     flex: 1,
@@ -129,6 +125,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
+    marginRight: 8,
   },
   input: {
     ...TYPO.body,
@@ -143,17 +140,19 @@ const styles = StyleSheet.create({
   errorText: {
     ...TYPO.caption,
     fontStyle: 'italic',
+    marginBottom: 8,
   },
   voucherInfo: {
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
     alignItems: 'center',
-    gap: 4,
+    marginTop: 8,
   },
   voucherAmount: {
     ...TYPO.h2,
     fontWeight: '600',
+    marginBottom: 4,
   },
   voucherStatus: {
     ...TYPO.caption,

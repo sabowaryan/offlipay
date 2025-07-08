@@ -13,6 +13,7 @@ export const LIGHT_COLORS = {
   WARNING: '#F59E0B',
   ERROR: '#EF4444',
   INFO: '#3B82F6',
+  SHADOW: 'rgba(0,0,0,0.18)',
 };
 
 export const DARK_COLORS = {
@@ -30,4 +31,5 @@ export const DARK_COLORS = {
   WARNING: '#FBBF24',
   ERROR: '#F87171',
   INFO: '#60A5FA',
+  SHADOW: 'rgba(0,0,0,0.32)',
 }; 

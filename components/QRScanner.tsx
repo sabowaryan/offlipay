@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { X, Slash as FlashOn, FlashlightOff as FlashOff } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ViewStyle } from 'react-native';
+import { CameraView, CameraType, useCameraPermissions, FlashMode } from 'expo-camera';
+import { X, Flashlight, FlashlightOff } from 'lucide-react-native';
 
 interface QRScannerProps {
   onScan: (data: string) => void;
   onClose: () => void;
+  style?: ViewStyle;
 }
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function QRScanner({ onScan, onClose }: QRScannerProps) {
+export default function QRScanner({ onScan, onClose, style }: QRScannerProps) {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [flash, setFlash] = useState(false);
@@ -24,7 +25,6 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
 
   const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
     if (scanned) return;
-    
     setScanned(true);
     onScan(data);
   };
@@ -35,48 +35,46 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
 
   if (!permission) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.text}>Requesting camera permission...</Text>
+      <View style={[styles.container, style]}>
+        <Text style={styles.text}>Demande d'autorisation caméra...</Text>
       </View>
     );
   }
 
   if (!permission.granted) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.text}>We need your permission to show the camera</Text>
+      <View style={[styles.container, style]}>
+        <Text style={styles.text}>Autorisation caméra requise</Text>
         <TouchableOpacity style={styles.button} onPress={requestPermission}>
-          <Text style={styles.buttonText}>Grant Permission</Text>
+          <Text style={styles.buttonText}>Autoriser</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <CameraView
         style={styles.camera}
         facing={facing}
         onBarcodeScanned={handleBarCodeScanned}
-        barcodeScannerSettings={{
-          barcodeTypes: ['qr'],
-        }}
+        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+        flash={flash ? ('torch' as FlashMode) : ('off' as FlashMode)}
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose} accessible accessibilityRole="button" accessibilityLabel="Fermer le scanner">
             <X size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerText}>Scan QR Code</Text>
-          <TouchableOpacity style={styles.flashButton} onPress={toggleFlash}>
+          <Text style={styles.headerText}>Scanner un QR Code</Text>
+          <TouchableOpacity style={styles.flashButton} onPress={toggleFlash} accessible accessibilityRole="button" accessibilityLabel="Activer/désactiver le flash">
             {flash ? (
-              <FlashOn size={24} color="#FFFFFF" />
+              <Flashlight size={24} color="#FFFFFF" />
             ) : (
-              <FlashOff size={24} color="#FFFFFF" />
+              <FlashlightOff size={24} color="#FFFFFF" />
             )}
           </TouchableOpacity>
         </View>
-
         {/* Scanning Frame */}
         <View style={styles.scanArea}>
           <View style={styles.scanFrame}>
@@ -86,18 +84,12 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
             <View style={[styles.corner, styles.bottomRight]} />
           </View>
         </View>
-
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Position the QR code within the frame to scan
-          </Text>
+          <Text style={styles.footerText}>Placez le QR code dans le cadre pour scanner</Text>
           {scanned && (
-            <TouchableOpacity 
-              style={styles.scanAgainButton} 
-              onPress={() => setScanned(false)}
-            >
-              <Text style={styles.scanAgainText}>Scan Again</Text>
+            <TouchableOpacity style={styles.scanAgainButton} onPress={() => setScanned(false)} accessible accessibilityRole="button" accessibilityLabel="Scanner à nouveau">
+              <Text style={styles.scanAgainText}>Scanner à nouveau</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -109,10 +101,20 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999,
     backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   camera: {
     flex: 1,
+    width: '100%',
+    height: '100%',
   },
   header: {
     flexDirection: 'row',
@@ -199,25 +201,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#000',
-    fontFamily: 'Inter-Bold',
-  },
-  text: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    fontFamily: 'Inter-Regular',
   },
   button: {
-    marginTop: 20,
+    marginTop: 16,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: '#00E676',
+    backgroundColor: '#2196F3',
     borderRadius: 8,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
-    fontFamily: 'Inter-Bold',
+    color: '#FFF',
+  },
+  text: {
+    color: '#FFF',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 32,
   },
 });

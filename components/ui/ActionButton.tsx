@@ -1,19 +1,18 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
-import { LucideIcon, Activity } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { TouchableOpacity, Text, StyleSheet, View, ViewStyle, ActivityIndicator } from 'react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TYPO } from '@/utils/typography';
 
 interface ActionButtonProps {
   title: string;
   onPress: () => void;
-  icon?: LucideIcon;
+  icon?: React.ComponentType<{ size?: number; color?: string }>;
   loading?: boolean;
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'success' | 'error';
   size?: 'small' | 'medium' | 'large';
   fullWidth?: boolean;
+  style?: ViewStyle;
 }
 
 export default function ActionButton({
@@ -25,6 +24,7 @@ export default function ActionButton({
   variant = 'primary',
   size = 'medium',
   fullWidth = false,
+  style,
 }: ActionButtonProps) {
   const { colors: COLORS } = useThemeColors();
 
@@ -52,35 +52,42 @@ export default function ActionButton({
     }
   };
 
-  const colors = getVariantColors();
+  const [bgColor, bgColor2] = getVariantColors();
   const sizeStyles = getSizeStyles();
 
   return (
     <TouchableOpacity
       style={[
         styles.container,
+        { backgroundColor: disabled ? COLORS.GRAY_LIGHT : bgColor },
         fullWidth && styles.fullWidth,
         disabled && styles.disabled,
+        style,
       ]}
       onPress={onPress}
       disabled={disabled || loading}
+      activeOpacity={0.85}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={title}
     >
-      <LinearGradient
-        colors={disabled ? [COLORS.GRAY_MEDIUM, COLORS.GRAY_LIGHT] : colors}
-        style={[styles.gradient, sizeStyles]}
-      >
+      <View style={[styles.content, sizeStyles]}>
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <Activity size={20} color={COLORS.WHITE} />
+          <>
+            <ActivityIndicator size="small" color={COLORS.WHITE} style={{ marginRight: 8 }} />
             <Text style={styles.buttonText}>Chargement...</Text>
-          </View>
+          </>
         ) : (
           <>
-            {Icon && <Icon size={20} color={COLORS.WHITE} />}
+            {Icon && (
+              <View style={{ marginRight: 8 }}>
+                <Icon size={20} color={COLORS.WHITE} />
+              </View>
+            )}
             <Text style={styles.buttonText}>{title}</Text>
           </>
         )}
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -94,6 +101,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
+    marginBottom: 16,
   },
   fullWidth: {
     width: '100%',
@@ -101,16 +109,10 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.6,
   },
-  gradient: {
+  content: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 12,
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
   },
   buttonText: {
     ...TYPO.body,

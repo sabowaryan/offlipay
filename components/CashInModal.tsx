@@ -2,28 +2,24 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Alert,
   Dimensions,
-  StatusBar,
   useWindowDimensions,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import {
   DollarSign,
-  CheckCircle,
-  AlertCircle,
   Copy,
   Eye,
   EyeOff,
   User as UserIcon,
   CreditCard,
 } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TYPO } from '@/utils/typography';
-import { CashInMethod, Agent, Voucher, BankAccount, CashInTransaction, User } from '@/types';
+import { CashInMethod, Agent, BankAccount, CashInTransaction, User } from '@/types';
 import { StorageService } from '@/utils/storage';
 import { WalletService } from '@/services/WalletService';
 import QRScanner from './QRScanner';
@@ -43,9 +39,6 @@ import BankAccountList from './cash-in/BankAccountList';
 import { useCashInValidation } from '@/hooks/useCashInValidation';
 import { useCashInFees } from '@/hooks/useCashInFees';
 
-
-
-
 const { width: screenWidth } = Dimensions.get('window');
 
 interface CashInModalProps {
@@ -55,9 +48,11 @@ interface CashInModalProps {
 }
 
 export default function CashInModal({ visible, onClose, onSuccess }: CashInModalProps) {
-  const { colors: COLORS, theme } = useThemeColors();
+  const { colors: COLORS } = useThemeColors();
   const { width: windowWidth } = useWindowDimensions();
-  
+  const isTablet = windowWidth > 600;
+  const isMobile = windowWidth < 400;
+
   // États principaux
   const [selectedMethod, setSelectedMethod] = useState<CashInMethod | null>(null);
   const [amount, setAmount] = useState('');
@@ -78,8 +73,6 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     isValid: boolean;
   } | undefined>(undefined);
 
-  const isTablet = windowWidth > 768;
-
   // Hooks personnalisés
   const validation = useCashInValidation({
     minAmount: 1,
@@ -88,17 +81,19 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     requireVoucher: selectedMethod === 'voucher',
     requireBankAccount: selectedMethod === 'banking',
   });
-
   const { calculateFees, getFeeDescription, getProcessingTime } = useCashInFees();
 
   useEffect(() => {
     if (visible) {
-      // Mettre à jour l'utilisateur quand le modal s'ouvre
       setUser(WalletService.getCurrentUser());
       loadData();
+      setShowScanner(false);
+    } else {
+      setShowScanner(false);
     }
   }, [visible]);
 
+  // Chargement des agents et comptes bancaires
   const loadData = async () => {
     try {
       const [agentsData, bankAccountsData] = await Promise.all([
@@ -112,6 +107,7 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     }
   };
 
+  // Gestion du choix de méthode
   const handleMethodSelect = (method: CashInMethod) => {
     setSelectedMethod(method);
     setSelectedAgent(undefined);
@@ -121,14 +117,17 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     validation.clearErrors();
   };
 
+  // Gestion de la sélection d'agent
   const handleAgentSelect = (agent: Agent) => {
     setSelectedAgent(agent);
   };
 
+  // Gestion de la sélection de compte bancaire
   const handleBankAccountSelect = (account: BankAccount) => {
     setSelectedBankAccount(account);
   };
 
+  // Gestion du code voucher
   const handleVoucherCodeChange = async (code: string) => {
     setVoucherCode(code);
     if (code.length >= 6) {
@@ -152,10 +151,11 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     }
   };
 
+  // Gestion du scan QR
   const handleScanVoucher = () => {
+    console.log('scan click');
     setShowScanner(true);
   };
-
   const handleScanResult = async (scannedData: string) => {
     try {
       const voucher = await StorageService.getVoucherByCode(scannedData);
@@ -176,12 +176,12 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     setShowScanner(false);
   };
 
+  // Validation et traitement du cash-in
   const handleCashIn = async () => {
     if (!user) {
       Alert.alert('Erreur', 'Utilisateur non connecté');
       return;
     }
-
     const isValid = validation.validateForm({
       amount,
       method: selectedMethod,
@@ -189,19 +189,11 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
       voucherCode,
       bankAccountId: selectedBankAccount?.id,
     });
-
-    if (!isValid) {
-      return;
-    }
-
+    if (!isValid) return;
     try {
       setLoading(true);
       const amountValue = parseFloat(amount);
-      
-      // Calculer les frais
       const feeCalculation = calculateFees(amountValue, selectedMethod!, selectedAgent, selectedBankAccount);
-      
-      // Créer la transaction d'alimentation
       const cashInTransaction: CashInTransaction = {
         id: `cash_in_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         walletId: user.walletId,
@@ -209,21 +201,16 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
         method: selectedMethod!,
         status: 'pending',
         timestamp: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
-        signature: 'signature_placeholder', // À implémenter avec cryptographie
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        signature: 'signature_placeholder',
         agentId: selectedAgent?.id,
         voucherCode: selectedMethod === 'voucher' ? voucherCode : undefined,
         bankAccountId: selectedBankAccount?.id,
         fees: feeCalculation.fees,
         syncStatus: 'local'
       };
-
-      // Sauvegarder la transaction
       await StorageService.saveCashInTransaction(cashInTransaction);
-
-      // Traiter selon la méthode
       await processCashInTransaction(cashInTransaction);
-
     } catch (error) {
       console.error('Erreur lors du cash-in:', error);
       Alert.alert('Erreur', 'Impossible de traiter la demande de cash-in');
@@ -232,6 +219,7 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     }
   };
 
+  // Orchestration du traitement selon la méthode
   const processCashInTransaction = async (transaction: CashInTransaction) => {
     try {
       switch (transaction.method) {
@@ -251,33 +239,22 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
       throw error;
     }
   };
-
   const simulateAgentValidation = async (transaction: CashInTransaction) => {
-    // Simuler la validation par l'agent
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
     await StorageService.updateCashInTransactionStatus(transaction.id, 'validated');
     await processCashIn(transaction);
   };
-
   const simulateBankingTransfer = async (transaction: CashInTransaction) => {
-    // Simuler le virement bancaire
     await new Promise(resolve => setTimeout(resolve, 3000));
-    
     await StorageService.updateCashInTransactionStatus(transaction.id, 'completed');
     await processCashIn(transaction);
   };
-
   const processCashIn = async (transaction: CashInTransaction) => {
-    // Mettre à jour le solde utilisateur
     if (user) {
       user.balance += transaction.amount;
       await StorageService.updateUser(user);
     }
-
-    // Mettre à jour le statut de la transaction
     await StorageService.updateCashInTransactionStatus(transaction.id, 'completed');
-
     Alert.alert(
       'Cash-in réussi !',
       `${transaction.amount}€ ont été ajoutés à votre portefeuille`,
@@ -292,7 +269,7 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
       ]
     );
   };
-
+  // Reset du formulaire
   const resetForm = () => {
     setSelectedMethod(null);
     setAmount('');
@@ -303,7 +280,7 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     setShowScanner(false);
     validation.clearErrors();
   };
-
+  // Copier l'ID portefeuille
   const copyWalletId = async () => {
     if (user) {
       try {
@@ -314,7 +291,7 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
       }
     }
   };
-
+  // Formatage du solde
   const formatBalance = (balance: number) => {
     if (balanceVisible) {
       return balance.toLocaleString('fr-FR', {
@@ -327,6 +304,7 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     return '••••••••';
   };
 
+  // Rendu du contenu principal du modal
   const renderContent = () => {
     if (!selectedMethod) {
       return (
@@ -336,26 +314,22 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
         />
       );
     }
-
     const feeCalculation = amount ? calculateFees(parseFloat(amount), selectedMethod, selectedAgent, selectedBankAccount) : null;
-
     return (
-      <ScrollView 
-        style={styles.content}
+      <ScrollView
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={{ paddingHorizontal: 0, paddingBottom: 24, gap: 20 }}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Sélecteur de méthode */}
-        <View style={styles.methodSection}>
-          <Text style={[styles.sectionTitle, { color: COLORS.TEXT }]}>
-            Méthode sélectionnée
-          </Text>
+        <View style={{ gap: 12 }}>
+          <Text style={[TYPO.h3, { color: COLORS.TEXT, marginBottom: 8 }]}>Méthode sélectionnée</Text>
           <MethodSelector
             selectedMethod={selectedMethod}
             onMethodSelect={handleMethodSelect}
           />
         </View>
-
         {/* Saisie du montant */}
         <SectionCard
           icon={DollarSign}
@@ -372,7 +346,6 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
             quickAmounts={[10, 25, 50, 100]}
           />
         </SectionCard>
-
         {/* Sélection spécifique selon la méthode */}
         {selectedMethod === 'agent' && (
           <SectionCard
@@ -387,7 +360,6 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
             />
           </SectionCard>
         )}
-
         {selectedMethod === 'voucher' && (
           <VoucherInput
             voucherCode={voucherCode}
@@ -397,7 +369,6 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
             voucherInfo={voucherInfo}
           />
         )}
-
         {selectedMethod === 'banking' && (
           <SectionCard
             icon={CreditCard}
@@ -411,54 +382,33 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
             />
           </SectionCard>
         )}
-
         {/* Résumé et frais */}
         {amount && feeCalculation && (
-          <View style={[styles.summaryCard, { 
-            backgroundColor: COLORS.CARD, 
-            borderColor: COLORS.GRAY_LIGHT 
-          }]}>
-            <Text style={[styles.summaryTitle, { color: COLORS.TEXT }]}>
-              Résumé de la transaction
-            </Text>
-            
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: COLORS.GRAY_MEDIUM }]}>
-                Montant
-              </Text>
-              <Text style={[styles.summaryValue, { color: COLORS.TEXT }]}>
-                {feeCalculation.amount}€
-              </Text>
+          <View style={{
+            padding: 20,
+            borderRadius: 16,
+            borderWidth: 1,
+            backgroundColor: COLORS.CARD,
+            borderColor: COLORS.GRAY_LIGHT,
+            gap: 12,
+          }}>
+            <Text style={[TYPO.h3, { color: COLORS.TEXT, marginBottom: 8 }]}>Résumé de la transaction</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={[TYPO.body, { color: COLORS.GRAY_MEDIUM }]}>Montant</Text>
+              <Text style={[TYPO.body, { color: COLORS.TEXT, fontWeight: '600' }]}>{feeCalculation.amount}€</Text>
             </View>
-            
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: COLORS.GRAY_MEDIUM }]}>
-                Frais
-              </Text>
-              <Text style={[styles.summaryValue, { color: COLORS.ERROR }]}>
-                {feeCalculation.fees.toFixed(2)}€
-              </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={[TYPO.body, { color: COLORS.GRAY_MEDIUM }]}>Frais</Text>
+              <Text style={[TYPO.body, { color: COLORS.ERROR, fontWeight: '600' }]}>{feeCalculation.fees.toFixed(2)}€</Text>
             </View>
-            
-            <View style={[styles.summaryRow, styles.totalRow]}>
-              <Text style={[styles.summaryLabel, { color: COLORS.TEXT }]}>
-                Total reçu
-              </Text>
-              <Text style={[styles.summaryValue, { color: COLORS.SUCCESS }]}>
-                {feeCalculation.totalAmount.toFixed(2)}€
-              </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.1)', paddingTop: 12, marginTop: 4 }}>
+              <Text style={[TYPO.body, { color: COLORS.TEXT }]}>Total reçu</Text>
+              <Text style={[TYPO.body, { color: COLORS.SUCCESS, fontWeight: '600' }]}>{feeCalculation.totalAmount.toFixed(2)}€</Text>
             </View>
-            
-            <Text style={[styles.feeDescription, { color: COLORS.GRAY_MEDIUM }]}>
-              {getFeeDescription(selectedMethod, selectedAgent)}
-            </Text>
-            
-            <Text style={[styles.processingTime, { color: COLORS.GRAY_MEDIUM }]}>
-              Délai de traitement: {getProcessingTime(selectedMethod)}
-            </Text>
+            <Text style={[TYPO.caption, { color: COLORS.GRAY_MEDIUM, fontStyle: 'italic', marginTop: 8 }]}>{getFeeDescription(selectedMethod, selectedAgent)}</Text>
+            <Text style={[TYPO.caption, { color: COLORS.GRAY_MEDIUM, marginTop: 4 }]}>Délai de traitement: {getProcessingTime(selectedMethod)}</Text>
           </View>
         )}
-
         {/* Bouton de validation */}
         <ActionButton
           title="Confirmer le cash-in"
@@ -472,6 +422,10 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     );
   };
 
+  // DEBUG LOGS
+  console.log('showScanner', showScanner);
+
+  // Rendu principal du modal
   return (
     <>
       <ModalContainer
@@ -479,170 +433,86 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
         onClose={onClose}
         title="Ajouter des fonds"
         subtitle="Choisissez votre méthode de recharge"
-        maxHeight={Dimensions.get('window').height * 0.9}
+        maxWidth={isTablet ? 500 : '98%'}
+        maxHeight={Dimensions.get('window').height * 0.8}
       >
-        {/* Header avec solde */}
+        {/* Header avec solde et ID portefeuille */}
         {user && (
-          <View style={[styles.balanceHeader, { 
-            backgroundColor: COLORS.CARD, 
-            borderColor: COLORS.GRAY_LIGHT 
-          }]}>
-            <View style={styles.balanceInfo}>
-              <Text style={[styles.balanceLabel, { color: COLORS.GRAY_MEDIUM }]}>
-                Solde actuel
-              </Text>
-              <View style={styles.balanceRow}>
-                <Text style={[styles.balanceAmount, { color: COLORS.TEXT }]}>
-                  {formatBalance(user.balance)}
-                </Text>
-                <TouchableOpacity 
+          <View
+            style={{
+              margin: isMobile ? 8 : 20,
+              padding: isMobile ? 12 : 24,
+              borderRadius: 28,
+              // Dégradé ou glassmorphism
+              backgroundColor: COLORS.CARD + 'F2',
+              shadowColor: COLORS.SHADOW,
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.12,
+              shadowRadius: 24,
+              elevation: 8,
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: isMobile ? 'stretch' : 'center',
+              justifyContent: 'space-between',
+              gap: isMobile ? 16 : 32,
+              borderWidth: 0,
+            }}
+          >
+            {/* Bloc solde */}
+            <View style={{ flex: 1, alignItems: isMobile ? 'center' : 'flex-start', justifyContent: 'center' }}>
+              <Text style={[TYPO.caption, { color: COLORS.GRAY_MEDIUM, marginBottom: 2, textAlign: isMobile ? 'center' : 'left' }]}>Solde actuel</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', gap: 10 }}>
+                <Text style={[TYPO.h1, { color: COLORS.PRIMARY, fontWeight: '700', fontSize: isMobile ? 28 : 32, textAlign: isMobile ? 'center' : 'left', letterSpacing: 0.2 }]}>{formatBalance(user.balance)}</Text>
+                <TouchableOpacity
                   onPress={() => setBalanceVisible(!balanceVisible)}
-                  style={styles.eyeButton}
+                  style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.PRIMARY + '15', alignItems: 'center', justifyContent: 'center', marginLeft: 2 }}
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel={balanceVisible ? 'Masquer le solde' : 'Afficher le solde'}
                 >
                   {balanceVisible ? (
-                    <Eye size={16} color={COLORS.GRAY_MEDIUM} />
+                    <Eye size={20} color={COLORS.PRIMARY} />
                   ) : (
-                    <EyeOff size={16} color={COLORS.GRAY_MEDIUM} />
+                    <EyeOff size={20} color={COLORS.PRIMARY} />
                   )}
                 </TouchableOpacity>
               </View>
             </View>
-            
-            <View style={styles.walletInfo}>
-              <Text style={[styles.walletLabel, { color: COLORS.GRAY_MEDIUM }]}>
-                ID Portefeuille
-              </Text>
-              <View style={styles.walletRow}>
-                <Text style={[styles.walletId, { color: COLORS.TEXT }]}>
-                  {user.walletId.slice(0, 8)}...{user.walletId.slice(-8)}
-                </Text>
-                <TouchableOpacity 
+            {/* Bloc ID portefeuille */}
+            <View style={{ flex: 1, alignItems: isMobile ? 'center' : 'flex-end', justifyContent: 'center', marginTop: isMobile ? 16 : 0 }}>
+              <Text style={[TYPO.caption, { color: COLORS.GRAY_MEDIUM, marginBottom: 2, textAlign: isMobile ? 'center' : 'right' }]}>ID Portefeuille</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-end', gap: 8 }}>
+                <View style={{
+                  backgroundColor: COLORS.PRIMARY + '10',
+                  borderRadius: 12,
+                  paddingVertical: 4,
+                  paddingHorizontal: 10,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  minWidth: 90,
+                }}>
+                  <Text style={[TYPO.caption, { color: COLORS.PRIMARY, fontFamily: 'monospace', fontWeight: '600', fontSize: 13 }]}> {user.walletId.slice(0, 8)}...{user.walletId.slice(-8)} </Text>
+                </View>
+                <TouchableOpacity
                   onPress={copyWalletId}
-                  style={[styles.copyButton, { backgroundColor: COLORS.PRIMARY + '15' }]}
+                  style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.PRIMARY + '15' }}
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel="Copier l'ID portefeuille"
                 >
-                  <Copy size={14} color={COLORS.PRIMARY} />
+                  <Copy size={16} color={COLORS.PRIMARY} />
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         )}
-
-        {renderContent()}
+        <View style={{ paddingHorizontal: isMobile ? 8 : 24 }}>
+          {renderContent()}
+        </View>
       </ModalContainer>
-
       {/* Scanner QR pour vouchers */}
-      {showScanner && (
-        <QRScanner
-          onScan={handleScanResult}
-          onClose={() => setShowScanner(false)}
-        />
-      )}
+      <Modal visible={showScanner} animationType="slide" transparent={false} onRequestClose={() => setShowScanner(false)}>
+        <Text style={{color: 'red', fontSize: 32, textAlign: 'center', marginTop: 100}}>TEST</Text>
+      </Modal>
     </>
   );
-}
-
-const styles = StyleSheet.create({
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    gap: 20,
-  },
-  methodSection: {
-    gap: 12,
-  },
-  sectionTitle: {
-    ...TYPO.h3,
-    marginBottom: 8,
-  },
-  balanceHeader: {
-    margin: 20,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  balanceInfo: {
-    flex: 1,
-  },
-  balanceLabel: {
-    ...TYPO.caption,
-    marginBottom: 4,
-  },
-  balanceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  balanceAmount: {
-    ...TYPO.h2,
-    fontWeight: '600',
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  walletInfo: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  walletLabel: {
-    ...TYPO.caption,
-    marginBottom: 4,
-  },
-  walletRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  walletId: {
-    ...TYPO.caption,
-    fontFamily: 'monospace',
-  },
-  copyButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  summaryCard: {
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 12,
-  },
-  summaryTitle: {
-    ...TYPO.h3,
-    marginBottom: 8,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    ...TYPO.body,
-  },
-  summaryValue: {
-    ...TYPO.body,
-    fontWeight: '600',
-  },
-  totalRow: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
-    paddingTop: 12,
-    marginTop: 4,
-  },
-  feeDescription: {
-    ...TYPO.caption,
-    fontStyle: 'italic',
-    marginTop: 8,
-  },
-  processingTime: {
-    ...TYPO.caption,
-    marginTop: 4,
-  },
-}); 
+} 

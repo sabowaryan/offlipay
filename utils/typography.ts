@@ -1,30 +1,39 @@
 import { StyleSheet } from 'react-native';
-import { COLORS } from './colors';
 
 export const TYPO = StyleSheet.create({
   h1: {
     fontFamily: 'Inter-Bold',
     fontSize: 28,
-    color: COLORS.GRAY_DARK,
+    fontWeight: '700',
+    lineHeight: 36,
+    letterSpacing: 0.1,
   },
   h2: {
     fontFamily: 'Inter-Medium',
     fontSize: 24,
-    color: COLORS.GRAY_DARK,
+    fontWeight: '700',
+    lineHeight: 28,
+    letterSpacing: 0.1,
   },
   h3: {
     fontFamily: 'Inter-Medium',
     fontSize: 20,
-    color: COLORS.GRAY_DARK,
+    fontWeight: '600',
+    lineHeight: 24,
+    letterSpacing: 0.05,
   },
   body: {
     fontFamily: 'Inter-Regular',
     fontSize: 16,
-    color: COLORS.GRAY_DARK,
+    fontWeight: '400',
+    lineHeight: 22,
+    letterSpacing: 0.02,
   },
   caption: {
     fontFamily: 'Inter-Regular',
     fontSize: 14,
-    color: COLORS.GRAY_MEDIUM,
+    fontWeight: '400',
+    lineHeight: 18,
+    letterSpacing: 0.01,
   },
 }); 

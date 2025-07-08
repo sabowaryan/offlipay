@@ -75,7 +75,10 @@ export function useThemeColors() {
   
   // Retourner les couleurs et les fonctions de gestion
   return {
-    colors,
+    colors: {
+      ...colors,
+      SHADOW: colors.SHADOW,
+    },
     theme: finalTheme,
     manualTheme: globalManualTheme,
     setTheme,

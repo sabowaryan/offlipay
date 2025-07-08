@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { User, CreditCard, QrCode } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TYPO } from '@/utils/typography';
@@ -9,6 +9,7 @@ import { CashInMethod } from '@/types';
 interface MethodSelectorProps {
   selectedMethod: CashInMethod | null;
   onMethodSelect: (method: CashInMethod) => void;
+  style?: ViewStyle;
 }
 
 const METHODS = [
@@ -17,7 +18,7 @@ const METHODS = [
     icon: User,
     title: 'Agents',
     subtitle: 'Dépôt en espèces',
-    description: 'Retirez de l\'argent auprès d\'un agent partenaire',
+    description: "Retirez de l'argent auprès d'un agent partenaire",
     iconColor: '#FF6B35',
   },
   {
@@ -41,20 +42,16 @@ const METHODS = [
 export default function MethodSelector({
   selectedMethod,
   onMethodSelect,
+  style,
 }: MethodSelectorProps) {
   const { colors: COLORS } = useThemeColors();
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.title, { color: COLORS.TEXT }]}>
-        Choisissez votre méthode
-      </Text>
-      <Text style={[styles.subtitle, { color: COLORS.GRAY_MEDIUM }]}>
-        Sélectionnez comment vous souhaitez ajouter des fonds
-      </Text>
-      
+    <View style={[styles.container, style]}>
+      <Text style={[styles.title, { color: COLORS.TEXT }]}>Choisissez votre méthode</Text>
+      <Text style={[styles.subtitle, { color: COLORS.GRAY_MEDIUM }]}>Sélectionnez comment vous souhaitez ajouter des fonds</Text>
       <View style={styles.methodsContainer}>
-        {METHODS.map((method) => (
+        {METHODS.map((method, idx) => (
           <SelectionCard
             key={method.id}
             icon={method.icon}
@@ -64,6 +61,7 @@ export default function MethodSelector({
             description={method.description}
             selected={selectedMethod === method.id}
             onPress={() => onMethodSelect(method.id)}
+            style={idx !== METHODS.length - 1 ? { marginBottom: 12 } : undefined}
           />
         ))}
       </View>
@@ -73,18 +71,21 @@ export default function MethodSelector({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    width: '100%',
+    marginBottom: 16,
   },
   title: {
     ...TYPO.h2,
     textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
     ...TYPO.body,
     textAlign: 'center',
     lineHeight: 20,
+    marginBottom: 16,
   },
   methodsContainer: {
-    gap: 12,
+    width: '100%',
   },
 }); 
