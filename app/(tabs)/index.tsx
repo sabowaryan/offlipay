@@ -47,6 +47,7 @@ import { TYPO } from '@/utils/typography';
 import Logo from '@/components/Logo';
 import * as Clipboard from 'expo-clipboard';
 import CashInModal from '@/components/CashInModal';
+import QRScanner from '@/components/QRScanner';
 
 const { width } = Dimensions.get('window');
 
@@ -65,6 +66,8 @@ export default function HomeScreen() {
   const [showCashInModal, setShowCashInModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copiedWalletId, setCopiedWalletId] = useState(false);
+  const [showVoucherScanner, setShowVoucherScanner] = useState(false);
+  const [scannedVoucherCode, setScannedVoucherCode] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     loadUserData();
@@ -151,6 +154,17 @@ export default function HomeScreen() {
   const handleTransactionPress = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setShowTransactionDetails(true);
+  };
+
+  const handleRequestVoucherScan = () => {
+    setShowCashInModal(false);
+    setTimeout(() => setShowVoucherScanner(true), 350);
+  };
+
+  const handleVoucherScanResult = (code: string) => {
+    setShowVoucherScanner(false);
+    setScannedVoucherCode(code);
+    setTimeout(() => setShowCashInModal(true), 350);
   };
 
   if (loading) {
@@ -427,7 +441,20 @@ export default function HomeScreen() {
         visible={showCashInModal}
         onClose={() => setShowCashInModal(false)}
         onSuccess={handleCashInSuccess}
+        voucherCodeScanned={scannedVoucherCode}
+        onRequestVoucherScan={handleRequestVoucherScan}
       />
+
+      {/* Scanner QR global pour voucher */}
+      {showVoucherScanner && (
+        <QRScanner
+          onScan={handleVoucherScanResult}
+          onClose={() => {
+            setShowVoucherScanner(false);
+            setTimeout(() => setShowCashInModal(true), 350);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }

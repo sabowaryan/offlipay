@@ -45,6 +45,7 @@ import { TYPO } from '@/utils/typography';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserMode } from '@/hooks/useUserMode';
 import Logo from '@/components/Logo';
+import { useQRScanner } from '@/components/QRScannerProvider';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -68,6 +69,7 @@ export default function PayScreen() {
     amount?: string;
     receiverWalletId?: string;
   }>({});
+  const { openScanner } = useQRScanner();
 
   const isTablet = windowWidth > 768;
   const isSmallScreen = windowWidth < 375;
@@ -76,6 +78,18 @@ export default function PayScreen() {
     // Réinitialiser le mode si le userMode change
     setMode(null);
   }, [userMode]);
+
+  // Ouvre le scanner global quand mode === 'scan'
+  useEffect(() => {
+    if (mode === 'scan') {
+      openScanner({
+        onScan: handleScan,
+        title: 'Scanner un QR code',
+        description: 'Scannez le QR code pour payer',
+      });
+      setMode(null);
+    }
+  }, [mode, openScanner]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -310,16 +324,6 @@ export default function PayScreen() {
               </TouchableOpacity>
             )}
           </View>
-        )}
-
-        {/* Mode Scan (Buyer) */}
-        {mode === 'scan' && (
-          <Modal visible={true} animationType="slide">
-            <QRScanner
-              onScan={handleScan}
-              onClose={() => setMode(null)}
-            />
-          </Modal>
         )}
 
         {/* Mode Generate (Seller) */}

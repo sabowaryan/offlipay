@@ -38,6 +38,7 @@ import BankAccountList from './cash-in/BankAccountList';
 // Hooks personnalisés
 import { useCashInValidation } from '@/hooks/useCashInValidation';
 import { useCashInFees } from '@/hooks/useCashInFees';
+import { useQRScanner } from './QRScannerProvider';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -52,11 +53,11 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
   const { width: windowWidth } = useWindowDimensions();
   const isTablet = windowWidth > 600;
   const isMobile = windowWidth < 400;
+  const { openScanner } = useQRScanner();
 
   // États principaux
   const [selectedMethod, setSelectedMethod] = useState<CashInMethod | null>(null);
   const [amount, setAmount] = useState('');
-  const [showScanner, setShowScanner] = useState(false);
   const [voucherCode, setVoucherCode] = useState('');
   const [selectedAgent, setSelectedAgent] = useState<Agent | undefined>(undefined);
   const [selectedBankAccount, setSelectedBankAccount] = useState<BankAccount | undefined>(undefined);
@@ -87,9 +88,6 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     if (visible) {
       setUser(WalletService.getCurrentUser());
       loadData();
-      setShowScanner(false);
-    } else {
-      setShowScanner(false);
     }
   }, [visible]);
 
@@ -151,29 +149,18 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     }
   };
 
-  // Gestion du scan QR
+  // Gestion du scan QR via le scanner global
   const handleScanVoucher = () => {
-    console.log('scan click');
-    setShowScanner(true);
-  };
-  const handleScanResult = async (scannedData: string) => {
-    try {
-      const voucher = await StorageService.getVoucherByCode(scannedData);
-      if (voucher && !voucher.isUsed && new Date() < voucher.expiresAt) {
-        setVoucherCode(scannedData);
-        setAmount(voucher.amount.toString());
-        setVoucherInfo({
-          amount: voucher.amount,
-          currency: voucher.currency,
-          isValid: true,
-        });
-      } else {
-        Alert.alert('Voucher invalide', 'Ce voucher n\'est pas valide ou a déjà été utilisé');
-      }
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de valider le voucher');
-    }
-    setShowScanner(false);
+    onClose();
+    setTimeout(() => {
+      openScanner({
+        onScan: (scannedData: string) => {
+          setVoucherCode(scannedData);
+        },
+        title: 'Scanner un voucher',
+        description: 'Scannez le QR code du voucher',
+      });
+    }, 350);
   };
 
   // Validation et traitement du cash-in
@@ -277,7 +264,6 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     setSelectedAgent(undefined);
     setSelectedBankAccount(undefined);
     setVoucherInfo(undefined);
-    setShowScanner(false);
     validation.clearErrors();
   };
   // Copier l'ID portefeuille
@@ -422,9 +408,6 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
     );
   };
 
-  // DEBUG LOGS
-  console.log('showScanner', showScanner);
-
   // Rendu principal du modal
   return (
     <>
@@ -509,10 +492,6 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
           {renderContent()}
         </View>
       </ModalContainer>
-      {/* Scanner QR pour vouchers */}
-      <Modal visible={showScanner} animationType="slide" transparent={false} onRequestClose={() => setShowScanner(false)}>
-        <Text style={{color: 'red', fontSize: 32, textAlign: 'center', marginTop: 100}}>TEST</Text>
-      </Modal>
     </>
   );
 } 

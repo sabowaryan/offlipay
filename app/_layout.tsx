@@ -12,6 +12,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { StorageService } from '@/utils/storage';
 import * as Sentry from '@sentry/react-native';
+import { QRScannerProvider } from '@/components/QRScannerProvider';
 
 Sentry.init({
   dsn: 'https://dc4cee654643a25ea8bbe4e063aa2883@o4509445026152448.ingest.us.sentry.io/4509623728013312',
@@ -58,13 +59,13 @@ export default Sentry.wrap(function RootLayout() {
   }
 
   return (
-    <>
+    <QRScannerProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
-    </>
+    </QRScannerProvider>
   );
 });
