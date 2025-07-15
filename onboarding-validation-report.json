@@ -1,0 +1,993 @@
+{
+  "timestamp": "2025-07-15T17:15:01.771Z",
+  "summary": {
+    "total": 140,
+    "passed": 137,
+    "failed": 0,
+    "warnings": 3,
+    "successRate": 98,
+    "globalStatus": "success"
+  },
+  "details": [
+    {
+      "category": "Structure",
+      "test": "Fichier OnboardingContainer",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/OnboardingContainer.tsx",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier OnboardingScreen",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/OnboardingScreen.tsx",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier OnboardingProgress",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/OnboardingProgress.tsx",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier OnboardingButton",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/OnboardingButton.tsx",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Types TypeScript",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/types.ts",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Configuration des écrans",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/config.ts",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Chargeur de configuration",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/configLoader.ts",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Validateur de configuration",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/configValidator.ts",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Index des exports",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/index.ts",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Service d'onboarding",
+      "status": "pass",
+      "message": "Trouvé: services/OnboardingService.ts",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Illustration de bienvenue",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/illustrations/WelcomeIllustration.tsx",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Illustration paiement QR",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/illustrations/QRPaymentIllustration.tsx",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Illustration portefeuille",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/illustrations/WalletIllustration.tsx",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Illustration mode hors ligne",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/illustrations/OfflineIllustration.tsx",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Moniteur de performance",
+      "status": "pass",
+      "message": "Trouvé: components/onboarding/utils/performanceMonitor.ts",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Documentation principale",
+      "status": "pass",
+      "message": "Trouvé: docs/OnboardingDocumentation.md",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Guide de configuration",
+      "status": "pass",
+      "message": "Trouvé: docs/OnboardingConfigurationGuide.md",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Exemples d'usage",
+      "status": "pass",
+      "message": "Trouvé: examples/OnboardingExamples.tsx",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Dossier components/onboarding",
+      "status": "pass",
+      "message": "Dossier présent",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Dossier components/onboarding/illustrations",
+      "status": "pass",
+      "message": "Dossier présent",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Dossier components/onboarding/utils",
+      "status": "pass",
+      "message": "Dossier présent",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Constante ONBOARDING_SCREENS",
+      "status": "pass",
+      "message": "Définie dans config.ts",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Constante DEFAULT_ONBOARDING_SETTINGS",
+      "status": "pass",
+      "message": "Définie dans config.ts",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Constante ONBOARDING_CONSTANTS",
+      "status": "pass",
+      "message": "Définie dans config.ts",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Constante SCREEN_DESCRIPTIONS",
+      "status": "pass",
+      "message": "Définie dans config.ts",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Constante ILLUSTRATION_ALT_TEXT",
+      "status": "pass",
+      "message": "Définie dans config.ts",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Constante BUTTON_TEXTS",
+      "status": "pass",
+      "message": "Définie dans config.ts",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Constante INTERACTION_HINTS",
+      "status": "pass",
+      "message": "Définie dans config.ts",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Constante ANIMATION_CONFIGS",
+      "status": "pass",
+      "message": "Définie dans config.ts",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Nombre d'écrans",
+      "status": "pass",
+      "message": "4 écrans configurés",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Champ id",
+      "status": "pass",
+      "message": "Présent dans la configuration",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Champ title",
+      "status": "pass",
+      "message": "Présent dans la configuration",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Champ subtitle",
+      "status": "pass",
+      "message": "Présent dans la configuration",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Champ illustration",
+      "status": "pass",
+      "message": "Présent dans la configuration",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Champ animationType",
+      "status": "pass",
+      "message": "Présent dans la configuration",
+      "details": null
+    },
+    {
+      "category": "Configuration",
+      "test": "Champ duration",
+      "status": "pass",
+      "message": "Présent dans la configuration",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface OnboardingScreenConfig",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface OnboardingSettings",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface OnboardingContainerProps",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface OnboardingState",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface OnboardingScreenProps",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface OnboardingProgressProps",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface OnboardingButtonProps",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface OnboardingPreferences",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface IllustrationProps",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface OnboardingGestureConfig",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Interface OnboardingError",
+      "status": "pass",
+      "message": "Définie",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Type AnimationType",
+      "status": "pass",
+      "message": "Défini",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Type InteractionType",
+      "status": "pass",
+      "message": "Défini",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Type AnimationSpeed",
+      "status": "pass",
+      "message": "Défini",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Type ProgressIndicatorStyle",
+      "status": "pass",
+      "message": "Défini",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Type ThemeType",
+      "status": "pass",
+      "message": "Défini",
+      "details": null
+    },
+    {
+      "category": "Types",
+      "test": "Type OnboardingErrorCode",
+      "status": "pass",
+      "message": "Défini",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests OnboardingContainer",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingContainer.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests OnboardingContainer",
+      "status": "pass",
+      "message": "3 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests OnboardingContainer",
+      "status": "warning",
+      "message": "Testing Library non importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests OnboardingScreen",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingScreen.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests OnboardingScreen",
+      "status": "pass",
+      "message": "7 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests OnboardingScreen",
+      "status": "warning",
+      "message": "Testing Library non importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests OnboardingProgress",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingProgress.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests OnboardingProgress",
+      "status": "pass",
+      "message": "4 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests OnboardingProgress",
+      "status": "pass",
+      "message": "Testing Library importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests OnboardingService",
+      "status": "pass",
+      "message": "Trouvé: __tests__/services/OnboardingService.test.ts",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests OnboardingService",
+      "status": "pass",
+      "message": "32 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests OnboardingService",
+      "status": "warning",
+      "message": "Testing Library non importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests d'intégration",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingIntegration.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests d'intégration",
+      "status": "pass",
+      "message": "6 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests d'intégration",
+      "status": "pass",
+      "message": "Testing Library importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests d'accessibilité",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingAccessibility.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests d'accessibilité",
+      "status": "pass",
+      "message": "20 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests d'accessibilité",
+      "status": "pass",
+      "message": "Testing Library importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests navigation clavier",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingKeyboardNavigation.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests navigation clavier",
+      "status": "pass",
+      "message": "21 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests navigation clavier",
+      "status": "pass",
+      "message": "Testing Library importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests lecteurs d'écran",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingScreenReaderSupport.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests lecteurs d'écran",
+      "status": "pass",
+      "message": "23 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests lecteurs d'écran",
+      "status": "pass",
+      "message": "Testing Library importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests conformité WCAG",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingWCAGCompliance.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests conformité WCAG",
+      "status": "pass",
+      "message": "19 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests conformité WCAG",
+      "status": "pass",
+      "message": "Testing Library importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests de performance",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingPerformance.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests de performance",
+      "status": "pass",
+      "message": "17 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests de performance",
+      "status": "pass",
+      "message": "Testing Library importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests performance réseau",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingNetworkPerformance.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests performance réseau",
+      "status": "pass",
+      "message": "12 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests performance réseau",
+      "status": "pass",
+      "message": "Testing Library importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests responsive",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingResponsive.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests responsive",
+      "status": "pass",
+      "message": "3 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests responsive",
+      "status": "pass",
+      "message": "Testing Library importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Tests récupération d'erreur",
+      "status": "pass",
+      "message": "Trouvé: __tests__/components/OnboardingErrorRecovery.test.tsx",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Contenu Tests récupération d'erreur",
+      "status": "pass",
+      "message": "6 tests trouvés",
+      "details": null
+    },
+    {
+      "category": "Tests",
+      "test": "Imports Tests récupération d'erreur",
+      "status": "pass",
+      "message": "Testing Library importée",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Documentation principale",
+      "status": "pass",
+      "message": "Trouvé: docs/OnboardingDocumentation.md",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Contenu Documentation principale",
+      "status": "pass",
+      "message": "1494 mots",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Vue d'ensemble\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Installation et Configuration\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Utilisation de base\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Configuration personnalisée\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Composants disponibles\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Gestion des thèmes\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Accessibilité\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Performance\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Exemples d'usage\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"API Reference\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Dépannage\"",
+      "status": "pass",
+      "message": "Présente dans Documentation principale",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Exemples de code Documentation principale",
+      "status": "pass",
+      "message": "23 blocs de code",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Guide de configuration",
+      "status": "pass",
+      "message": "Trouvé: docs/OnboardingConfigurationGuide.md",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Contenu Guide de configuration",
+      "status": "pass",
+      "message": "1843 mots",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Configuration des écrans\"",
+      "status": "pass",
+      "message": "Présente dans Guide de configuration",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Types d'animations disponibles\"",
+      "status": "pass",
+      "message": "Présente dans Guide de configuration",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Types d'interactions\"",
+      "status": "pass",
+      "message": "Présente dans Guide de configuration",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Configuration globale\"",
+      "status": "pass",
+      "message": "Présente dans Guide de configuration",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Thèmes et apparence\"",
+      "status": "pass",
+      "message": "Présente dans Guide de configuration",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Illustrations personnalisées\"",
+      "status": "pass",
+      "message": "Présente dans Guide de configuration",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Configuration de performance\"",
+      "status": "pass",
+      "message": "Présente dans Guide de configuration",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Accessibilité\"",
+      "status": "pass",
+      "message": "Présente dans Guide de configuration",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Validation de configuration\"",
+      "status": "pass",
+      "message": "Présente dans Guide de configuration",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Section \"Exemples de configurations complètes\"",
+      "status": "pass",
+      "message": "Présente dans Guide de configuration",
+      "details": null
+    },
+    {
+      "category": "Documentation",
+      "test": "Exemples de code Guide de configuration",
+      "status": "pass",
+      "message": "33 blocs de code",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Fichier d'exemples",
+      "status": "pass",
+      "message": "Trouvé: examples/OnboardingExamples.tsx",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Exemple BasicOnboardingExample",
+      "status": "pass",
+      "message": "Fonction définie",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Exemple ConditionalOnboardingExample",
+      "status": "pass",
+      "message": "Fonction définie",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Exemple AnalyticsOnboardingExample",
+      "status": "pass",
+      "message": "Fonction définie",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Exemple BrandOnboardingExample",
+      "status": "pass",
+      "message": "Fonction définie",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Exemple AdaptiveOnboardingExample",
+      "status": "pass",
+      "message": "Fonction définie",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Exemple RobustOnboardingExample",
+      "status": "pass",
+      "message": "Fonction définie",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Exemple OptimizedOnboardingExample",
+      "status": "pass",
+      "message": "Fonction définie",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Exemple ABTestOnboardingExample",
+      "status": "pass",
+      "message": "Fonction définie",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Import OnboardingContainer",
+      "status": "pass",
+      "message": "Importé",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Import OnboardingService",
+      "status": "pass",
+      "message": "Importé",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Import useNavigation",
+      "status": "pass",
+      "message": "Importé",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Import useCallback",
+      "status": "pass",
+      "message": "Importé",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Import useEffect",
+      "status": "pass",
+      "message": "Importé",
+      "details": null
+    },
+    {
+      "category": "Exemples",
+      "test": "Documentation des exemples",
+      "status": "pass",
+      "message": "9 blocs de documentation",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Point d'entrée de l'application",
+      "status": "pass",
+      "message": "Trouvé: app/index.tsx",
+      "details": null
+    },
+    {
+      "category": "Intégration",
+      "test": "Vérification onboarding dans app/index.tsx",
+      "status": "pass",
+      "message": "Logique d'onboarding présente",
+      "details": null
+    },
+    {
+      "category": "Structure",
+      "test": "Fichier Configuration des dépendances",
+      "status": "pass",
+      "message": "Trouvé: package.json",
+      "details": null
+    },
+    {
+      "category": "Intégration",
+      "test": "Dépendance react-native-reanimated",
+      "status": "pass",
+      "message": "Version: ~3.17.4",
+      "details": null
+    },
+    {
+      "category": "Intégration",
+      "test": "Dépendance react-native-gesture-handler",
+      "status": "pass",
+      "message": "Version: ~2.24.0",
+      "details": null
+    },
+    {
+      "category": "Intégration",
+      "test": "Dépendance expo-haptics",
+      "status": "pass",
+      "message": "Version: ~14.1.3",
+      "details": null
+    }
+  ]
+}

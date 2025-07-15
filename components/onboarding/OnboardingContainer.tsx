@@ -8,6 +8,7 @@ import {
   Platform,
   BackHandler,
   Alert,
+  InteractionManager,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -31,6 +32,16 @@ import { OnboardingContainerProps, OnboardingScreenConfig } from './types';
 import OnboardingScreen from './OnboardingScreen';
 import { OnboardingProgress } from './OnboardingProgress';
 import OnboardingButton from './OnboardingButton';
+import {
+  usePerformanceMonitoring,
+  measurePerformance,
+  createPerformanceAwareTimeout,
+  canHandleComplexOperation
+} from './utils/performanceMonitor';
+import {
+  getOptimizedAnimationConfig,
+  shouldUseComplexAnimations
+} from './utils/performanceOptimization';
 
 // Import illustrations
 import WelcomeIllustration from './illustrations/WelcomeIllustration';
@@ -60,6 +71,21 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [skipEnabled, setSkipEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [performanceMode, setPerformanceMode] = useState(false);
+
+  // Performance monitoring
+  const {
+    startMonitoring,
+    stopMonitoring,
+    recordLoadTime,
+    recordInteraction,
+    recordAnimationCompletion,
+    getRecommendations,
+    onPerformanceDegradation,
+  } = usePerformanceMonitoring();
+
+  // Get optimized configuration
+  const useComplexAnimations = shouldUseComplexAnimations() && !performanceMode;
 
   // Animation values
   const translateX = useSharedValue(0);
@@ -69,39 +95,73 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   // Refs
   const panRef = useRef(null);
   const autoProgressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadStartTime = useRef<number>(Date.now());
 
-  // Load onboarding configuration
+  // Performance monitoring setup
   useEffect(() => {
-    const loadOnboardingConfig = async () => {
+    startMonitoring();
+
+    // Set up performance degradation handler
+    const unsubscribe = onPerformanceDegradation(() => {
+      console.warn('[Onboarding] Performance degradation detected, enabling performance mode');
+      setPerformanceMode(true);
+
+      // Get and log recommendations
+      const recommendations = getRecommendations();
+      console.log('[Onboarding] Performance recommendations:', recommendations);
+    });
+
+    return () => {
+      stopMonitoring();
+      unsubscribe();
+    };
+  }, [startMonitoring, stopMonitoring, onPerformanceDegradation, getRecommendations]);
+
+  // Load onboarding configuration with performance measurement
+  useEffect(() => {
+    const loadOnboardingConfig = measurePerformance(async () => {
       try {
         setIsLoading(true);
-        const [screensConfig, settings] = await Promise.all([
-          OnboardingService.getScreensConfig(),
-          OnboardingService.getOnboardingSettings(),
-        ]);
+        loadStartTime.current = Date.now();
 
-        setScreens(screensConfig);
-        setSkipEnabled(settings.skipEnabled);
+        // Use InteractionManager to ensure smooth loading
+        await InteractionManager.runAfterInteractions(async () => {
+          const [screensConfig, settings] = await Promise.all([
+            OnboardingService.getScreensConfig(),
+            OnboardingService.getOnboardingSettings(),
+          ]);
 
-        // Restore progress if user was in the middle of onboarding
-        const state = await OnboardingService.getOnboardingState();
-        if (state.currentScreen > 0 && state.currentScreen < screensConfig.length) {
-          setCurrentScreen(state.currentScreen);
-        }
+          setScreens(screensConfig);
+          setSkipEnabled(settings.skipEnabled);
 
-        // Animate progress indicator in
-        progressOpacity.value = withTiming(1, { duration: 500 });
+          // Restore progress if user was in the middle of onboarding
+          const state = await OnboardingService.getOnboardingState();
+          if (state.currentScreen > 0 && state.currentScreen < screensConfig.length) {
+            setCurrentScreen(state.currentScreen);
+          }
+
+          // Record load time
+          const loadTime = Date.now() - loadStartTime.current;
+          recordLoadTime('onboarding-config-load', loadTime);
+
+          // Animate progress indicator in with performance-aware timing
+          const animationDuration = useComplexAnimations ? 500 : 300;
+          progressOpacity.value = withTiming(1, {
+            duration: animationDuration,
+          });
+        });
       } catch (error) {
         console.error('Erreur lors du chargement de la configuration d\'onboarding:', error);
         // Fallback to default configuration
         setScreens([]);
+        recordLoadTime('onboarding-config-load-error', Date.now() - loadStartTime.current);
       } finally {
         setIsLoading(false);
       }
-    };
+    }, 'onboarding-initialization');
 
     loadOnboardingConfig();
-  }, []);
+  }, [recordLoadTime, useComplexAnimations]);
 
   // Save progress automatically
   const saveProgress = useCallback(async (screenIndex: number) => {
@@ -112,13 +172,14 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
     }
   }, []);
 
-  // Handle screen navigation
+  // Handle screen navigation with performance monitoring
   const navigateToScreen = useCallback(
     async (targetScreen: number, animated: boolean = true) => {
       if (isAnimating || targetScreen < 0 || targetScreen >= screens.length) {
         return;
       }
 
+      const navigationStartTime = Date.now();
       setIsAnimating(true);
 
       // Clear auto-progress timer
@@ -127,28 +188,46 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
         autoProgressTimer.current = null;
       }
 
-      if (animated) {
+      if (animated && canHandleComplexOperation()) {
+        // Use performance-aware animation durations
+        const exitDuration = useComplexAnimations ? 200 : 150;
+        const enterDuration = useComplexAnimations ? 300 : 200;
+
         // Animate screen transition
-        screenOpacity.value = withTiming(0, { duration: 200 }, () => {
+        screenOpacity.value = withTiming(0, {
+          duration: exitDuration,
+        }, () => {
           runOnJS(setCurrentScreen)(targetScreen);
           runOnJS(saveProgress)(targetScreen);
 
-          screenOpacity.value = withTiming(1, { duration: 300 }, () => {
+          screenOpacity.value = withTiming(1, {
+            duration: enterDuration,
+          }, () => {
             runOnJS(setIsAnimating)(false);
+            runOnJS(() => {
+              const navigationTime = Date.now() - navigationStartTime;
+              recordInteraction(navigationTime);
+              recordAnimationCompletion(true);
+            })();
           });
         });
       } else {
+        // Simplified navigation for performance mode or low-end devices
         setCurrentScreen(targetScreen);
         await saveProgress(targetScreen);
         setIsAnimating(false);
+
+        const navigationTime = Date.now() - navigationStartTime;
+        recordInteraction(navigationTime);
+        recordAnimationCompletion(false); // No animation used
       }
 
-      // Haptic feedback
-      if (Platform.OS === 'ios') {
+      // Haptic feedback (only on capable devices)
+      if (Platform.OS === 'ios' && canHandleComplexOperation()) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
     },
-    [isAnimating, screens.length, screenOpacity, saveProgress]
+    [isAnimating, screens.length, screenOpacity, saveProgress, useComplexAnimations, recordInteraction, recordAnimationCompletion]
   );
 
   // Handle next screen

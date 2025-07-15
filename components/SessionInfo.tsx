@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { User, Database, Shield, Clock, Smartphone, CreditCard } from 'lucide-react-native';
+import { User as UserIcon, Database, Shield, Clock, Smartphone, CreditCard } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TYPO } from '@/utils/typography';
 import { WalletService } from '@/services/WalletService';
+import { User } from '@/types';
 
 interface SessionInfoProps {
   user: User;
@@ -39,14 +40,14 @@ export default function SessionInfo({ user }: SessionInfoProps) {
             Statut de Session
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Connecté :</Text>
           <Text style={[styles.value, { color: COLORS.SUCCESS }]}>
             {WalletService.isLoggedIn() ? 'Oui' : 'Non'}
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Mode :</Text>
           <Text style={[styles.value, { color: COLORS.TEXT }]}>
@@ -58,22 +59,22 @@ export default function SessionInfo({ user }: SessionInfoProps) {
       {/* User Information */}
       <View style={[styles.section, { backgroundColor: COLORS.CARD }]}>
         <View style={styles.sectionHeader}>
-          <User size={20} color={COLORS.PRIMARY} />
+          <UserIcon size={20} color={COLORS.PRIMARY} />
           <Text style={[TYPO.h3, { color: COLORS.TEXT, marginLeft: 8 }]}>
             Informations Utilisateur
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Nom :</Text>
           <Text style={[styles.value, { color: COLORS.TEXT }]}>{user.name}</Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Téléphone :</Text>
           <Text style={[styles.value, { color: COLORS.TEXT }]}>{user.phone}</Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Solde :</Text>
           <Text style={[styles.value, { color: COLORS.PRIMARY, fontWeight: 'bold' }]}>
@@ -90,14 +91,14 @@ export default function SessionInfo({ user }: SessionInfoProps) {
             Informations Wallet
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>ID Wallet :</Text>
           <Text style={[styles.value, { color: COLORS.TEXT, fontFamily: 'monospace' }]}>
             {user.walletId}
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Clé publique :</Text>
           <Text style={[styles.value, { color: COLORS.TEXT, fontFamily: 'monospace', fontSize: 12 }]}>
@@ -114,21 +115,21 @@ export default function SessionInfo({ user }: SessionInfoProps) {
             Persistance des Données
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Stockage :</Text>
           <Text style={[styles.value, { color: COLORS.SUCCESS }]}>
             SQLite Local
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Chiffrement :</Text>
           <Text style={[styles.value, { color: COLORS.SUCCESS }]}>
             PIN Hashé
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Clés :</Text>
           <Text style={[styles.value, { color: COLORS.SUCCESS }]}>
@@ -145,14 +146,14 @@ export default function SessionInfo({ user }: SessionInfoProps) {
             Horodatage
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Créé le :</Text>
           <Text style={[styles.value, { color: COLORS.TEXT }]}>
             {formatDate(user.createdAt)}
           </Text>
         </View>
-        
+
         {user.lastSyncAt && (
           <View style={styles.infoRow}>
             <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Dernière sync :</Text>
@@ -171,21 +172,21 @@ export default function SessionInfo({ user }: SessionInfoProps) {
             Validation des Données
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>Téléphone unique :</Text>
           <Text style={[styles.value, { color: COLORS.SUCCESS }]}>
             Vérifié
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>ID Wallet unique :</Text>
           <Text style={[styles.value, { color: COLORS.SUCCESS }]}>
             Généré automatiquement
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: COLORS.GRAY_MEDIUM }]}>PIN sécurisé :</Text>
           <Text style={[styles.value, { color: COLORS.SUCCESS }]}>

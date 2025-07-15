@@ -61,7 +61,17 @@ export const OnboardingProgress: React.FC<OnboardingProgressProps & { testID?: s
   const styles = createStyles(colors);
 
   return (
-    <View style={styles.container} testID={testID}>
+    <View 
+      style={styles.container} 
+      testID={testID || 'onboarding-progress'}
+      accessibilityLabel={`Étape ${currentStep} sur ${totalSteps}`}
+      accessibilityRole="progressbar"
+      accessibilityValue={{
+        min: 1,
+        max: totalSteps,
+        now: currentStep,
+      }}
+    >
       {/* Barre de progression */}
       <View style={styles.progressBarContainer}>
         <View style={styles.progressBarBackground} />

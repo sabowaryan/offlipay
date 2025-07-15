@@ -629,6 +629,28 @@ export class StorageService {
     );
   }
 
+  static async getVouchers(): Promise<Voucher[]> {
+    await this.initializeDatabase();
+    
+    const results = await this.db!.getAllAsync<any>(
+      'SELECT * FROM vouchers ORDER BY createdAt DESC'
+    );
+    
+    return results.map(result => ({
+      id: result.id,
+      code: result.code,
+      amount: result.amount,
+      currency: result.currency,
+      isUsed: result.isUsed === 1,
+      usedBy: result.usedBy,
+      usedAt: result.usedAt ? new Date(result.usedAt) : undefined,
+      expiresAt: new Date(result.expiresAt),
+      signature: result.signature,
+      series: result.series,
+      createdAt: new Date(result.createdAt)
+    }));
+  }
+
   // Bank account management
   static async saveBankAccount(account: BankAccount): Promise<void> {
     await this.initializeDatabase();

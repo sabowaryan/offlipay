@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { secureStorage } from '@/utils/secureStorage.native';
+import { secureStorage } from '@/utils/secureStorage/';
 
 // Types pour l'onboarding
 export interface OnboardingScreenConfig {

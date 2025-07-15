@@ -24,8 +24,8 @@ export class CashInService {
   // Récupérer les agents disponibles
   async getAvailableAgents(): Promise<Agent[]> {
     try {
-      const agents = await StorageService.getAgents();
-      return agents.filter(agent => agent.isActive);
+      const agents = await StorageService.getActiveAgents();
+      return agents; // getActiveAgents already filters for active agents
     } catch (error) {
       console.error('Erreur lors de la récupération des agents:', error);
       return [];
@@ -46,8 +46,8 @@ export class CashInService {
   // Récupérer les comptes bancaires de l'utilisateur
   async getUserBankAccounts(walletId: string): Promise<BankAccount[]> {
     try {
-      const accounts = await StorageService.getBankAccounts();
-      return accounts.filter(account => account.walletId === walletId);
+      const accounts = await StorageService.getBankAccounts(walletId);
+      return accounts; // getBankAccounts already filters by walletId
     } catch (error) {
       console.error('Erreur lors de la récupération des comptes bancaires:', error);
       return [];
@@ -272,11 +272,8 @@ export class CashInService {
   // Récupérer l'historique des transactions cash-in
   async getCashInHistory(walletId: string, limit: number = 50): Promise<CashInTransaction[]> {
     try {
-      const transactions = await StorageService.getCashInTransactions();
-      return transactions
-        .filter(t => t.walletId === walletId)
-        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-        .slice(0, limit);
+      const transactions = await StorageService.getCashInTransactions(walletId, limit);
+      return transactions; // getCashInTransactions already filters by walletId and applies limit
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'historique:', error);
       return [];
