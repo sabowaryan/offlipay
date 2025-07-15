@@ -3,12 +3,12 @@ import { View, Animated, Dimensions } from 'react-native';
 import Svg, { Rect, Path, G, Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
 import { IllustrationProps } from '../types';
 import { LIGHT_COLORS, DARK_COLORS } from '../../../utils/theme';
-import { 
-  getOptimizedAnimationConfig, 
-  getSVGOptimizations, 
+import {
+  getOptimizedAnimationConfig,
+  getSVGOptimizations,
   SVGMemoryManager,
   getOptimizedTiming,
-  shouldUseComplexAnimations 
+  shouldUseComplexAnimations
 } from '../utils/performanceOptimization';
 
 const { width } = Dimensions.get('window');
@@ -25,6 +25,10 @@ const QRPaymentIllustration: React.FC<IllustrationProps> = ({
   const successAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
+  // State variables for SVG opacity values
+  const [pulseOpacity, setPulseOpacity] = React.useState(1);
+  const [successOpacity, setSuccessOpacity] = React.useState(0);
+
   // Performance optimizations
   const animConfig = getOptimizedAnimationConfig();
   const svgOptimizations = getSVGOptimizations();
@@ -32,6 +36,23 @@ const QRPaymentIllustration: React.FC<IllustrationProps> = ({
   const useComplexAnimations = shouldUseComplexAnimations();
 
   const colors = theme === 'dark' ? DARK_COLORS : LIGHT_COLORS;
+
+  // Set up animation listeners
+  useEffect(() => {
+    // Add listeners for animated values to update state
+    const pulseListener = pulseAnim.addListener(({ value }) => {
+      setPulseOpacity(value);
+    });
+
+    const successListener = successAnim.addListener(({ value }) => {
+      setSuccessOpacity(value);
+    });
+
+    return () => {
+      pulseAnim.removeListener(pulseListener);
+      successAnim.removeListener(successListener);
+    };
+  }, [pulseAnim, successAnim]);
 
   useEffect(() => {
     if (animated && memoryManager.canStartAnimation('qr-payment')) {
@@ -212,7 +233,7 @@ const QRPaymentIllustration: React.FC<IllustrationProps> = ({
           </G>
 
           {/* Scanning corners (animated) */}
-          <G opacity={pulseAnim}>
+          <G opacity={pulseOpacity}>
             {/* Top-left scanning corner */}
             <Path
               d="M55 50 L55 65 M55 50 L70 50"
@@ -244,7 +265,7 @@ const QRPaymentIllustration: React.FC<IllustrationProps> = ({
           </G>
 
           {/* Success checkmark (appears after scanning) */}
-          <G opacity={successAnim}>
+          <G opacity={successOpacity}>
             <Circle cx="100" cy="100" r="15" fill={colors.SUCCESS} opacity="0.9" />
             <Path
               d="M92 100 L98 106 L108 94"

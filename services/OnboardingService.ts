@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SecureStorage } from '@/utils/secureStorage';
+import { secureStorage } from '@/utils/secureStorage.native';
 
 // Types pour l'onboarding
 export interface OnboardingScreenConfig {
@@ -317,7 +317,7 @@ export class OnboardingService {
      */
     static async saveSecureOnboardingData(key: string, value: string): Promise<void> {
         try {
-            await SecureStorage.setItemAsync(`onboarding_${key}`, value);
+            await secureStorage.setItemAsync(`onboarding_${key}`, value);
         } catch (error) {
             throw new OnboardingError(
                 OnboardingErrorCode.SECURE_STORAGE_FAILED,
@@ -332,7 +332,7 @@ export class OnboardingService {
      */
     static async getSecureOnboardingData(key: string): Promise<string | null> {
         try {
-            return await SecureStorage.getItemAsync(`onboarding_${key}`);
+            return await secureStorage.getItemAsync(`onboarding_${key}`);
         } catch (error) {
             console.warn('Erreur lors du chargement des données sécurisées:', error);
             return null; // Fallback
@@ -344,7 +344,7 @@ export class OnboardingService {
      */
     static async removeSecureOnboardingData(key: string): Promise<void> {
         try {
-            await SecureStorage.deleteItemAsync(`onboarding_${key}`);
+            await secureStorage.deleteItemAsync(`onboarding_${key}`);
         } catch (error) {
             throw new OnboardingError(
                 OnboardingErrorCode.SECURE_STORAGE_FAILED,

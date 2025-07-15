@@ -86,7 +86,13 @@
   - Gérer les animations de transition entre écrans
   - _Exigences: 1.2, 4.1, 4.2_
 
-- [ ] 7. Créer la configuration des écrans d'onboarding
+- [x] 7. Créer la configuration des écrans d'onboarding
+
+
+
+
+
+
 
 
 
@@ -101,7 +107,17 @@
   - Créer les tests pour la configuration et le chargement
   - _Exigences: 1.1, 2.1, 3.1_
 
-- [ ] 8. Intégrer l'onboarding dans le flux d'authentification
+- [x] 8. Intégrer l'onboarding dans le flux d'authentification
+
+
+
+
+
+
+
+
+
+
   - Modifier `app/index.tsx` pour vérifier le statut d'onboarding
   - Créer la route d'onboarding dans le système de navigation
   - Implémenter la logique de redirection après onboarding

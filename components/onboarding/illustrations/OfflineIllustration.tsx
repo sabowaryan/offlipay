@@ -26,6 +26,11 @@ const OfflineIllustration: React.FC<IllustrationProps> = ({
   const offlineIndicatorAnim = useRef(new Animated.Value(0)).current;
   const transactionPulseAnim = useRef(new Animated.Value(1)).current;
 
+  // State variables for SVG opacity values
+  const [wifiSignalOpacity, setWifiSignalOpacity] = useState(1);
+  const [offlineIndicatorOpacity, setOfflineIndicatorOpacity] = useState(0);
+  const [transactionPulseOpacity, setTransactionPulseOpacity] = useState(1);
+  
   const [connectionState, setConnectionState] = useState<'online' | 'transitioning' | 'offline'>('online');
   
   // Performance optimizations
@@ -35,6 +40,29 @@ const OfflineIllustration: React.FC<IllustrationProps> = ({
   const useComplexAnimations = shouldUseComplexAnimations();
   
   const colors = theme === 'dark' ? DARK_COLORS : LIGHT_COLORS;
+
+  // Set up animation listeners to update state variables
+  useEffect(() => {
+    // Add listeners for animated values
+    const wifiListener = wifiSignalAnim.addListener(({ value }) => {
+      setWifiSignalOpacity(value);
+    });
+    
+    const offlineListener = offlineIndicatorAnim.addListener(({ value }) => {
+      setOfflineIndicatorOpacity(value);
+    });
+    
+    const pulseListener = transactionPulseAnim.addListener(({ value }) => {
+      setTransactionPulseOpacity(value);
+    });
+    
+    return () => {
+      // Clean up listeners
+      wifiSignalAnim.removeListener(wifiListener);
+      offlineIndicatorAnim.removeListener(offlineListener);
+      transactionPulseAnim.removeListener(pulseListener);
+    };
+  }, [wifiSignalAnim, offlineIndicatorAnim, transactionPulseAnim]);
 
   useEffect(() => {
     if (animated && memoryManager.canStartAnimation('offline-main')) {
@@ -191,7 +219,7 @@ const OfflineIllustration: React.FC<IllustrationProps> = ({
           />
 
           {/* WiFi signal (animated) */}
-          <G opacity={wifiSignalAnim}>
+          <G opacity={wifiSignalOpacity}>
             <Path
               d="M125 52 Q130 52 130 57 Q130 62 125 62 Q120 62 120 57 Q120 52 125 52"
               fill={colors.SUCCESS}
@@ -212,7 +240,7 @@ const OfflineIllustration: React.FC<IllustrationProps> = ({
           </G>
 
           {/* Offline indicator (animated) */}
-          <G opacity={offlineIndicatorAnim}>
+          <G opacity={offlineIndicatorOpacity}>
             <Circle cx="125" cy="57" r="6" fill={colors.WARNING} opacity="0.9" />
             <Path
               d="M122 54 L128 60 M122 60 L128 54"
@@ -365,7 +393,7 @@ const OfflineIllustration: React.FC<IllustrationProps> = ({
           </G>
 
           {/* Offline capability badge */}
-          <G opacity={offlineIndicatorAnim}>
+          <G opacity={offlineIndicatorOpacity}>
             <Rect
               x="160"
               y="40"
@@ -388,7 +416,7 @@ const OfflineIllustration: React.FC<IllustrationProps> = ({
           </G>
 
           {/* Sync arrows (showing offline sync capability) */}
-          <G opacity={offlineIndicatorAnim}>
+          <G opacity={offlineIndicatorOpacity}>
             <G transform="translate(25, 100)">
               <Path
                 d="M0 0 Q5 -5 10 0 L8 2 M10 0 L8 -2"

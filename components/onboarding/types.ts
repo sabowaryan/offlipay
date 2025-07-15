@@ -55,7 +55,7 @@ export interface OnboardingState {
 export interface OnboardingScreenProps {
   title: string;
   subtitle: string;
-  illustration: ComponentType;
+  illustration: ComponentType<IllustrationProps>;
   animationDelay?: number;
   onInteraction?: () => void;
   interactionHint?: string;

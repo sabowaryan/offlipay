@@ -3,12 +3,12 @@ import { View, Animated, Dimensions, Text } from 'react-native';
 import Svg, { Rect, Path, G, Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
 import { IllustrationProps } from '../types';
 import { LIGHT_COLORS, DARK_COLORS } from '../../../utils/theme';
-import { 
-  getOptimizedAnimationConfig, 
-  getSVGOptimizations, 
+import {
+  getOptimizedAnimationConfig,
+  getSVGOptimizations,
   SVGMemoryManager,
   getOptimizedTiming,
-  shouldUseComplexAnimations 
+  shouldUseComplexAnimations
 } from '../utils/performanceOptimization';
 
 const { width } = Dimensions.get('window');
@@ -30,13 +30,17 @@ const WalletIllustration: React.FC<IllustrationProps> = ({
   ).current;
 
   const [displayBalance, setDisplayBalance] = useState(0);
-  
+  // State for transaction opacities
+  const [transactionOpacities, setTransactionOpacities] = useState(
+    Array(4).fill(0)
+  );
+
   // Performance optimizations
   const animConfig = getOptimizedAnimationConfig();
   const svgOptimizations = getSVGOptimizations();
   const memoryManager = SVGMemoryManager.getInstance();
   const useComplexAnimations = shouldUseComplexAnimations();
-  
+
   const colors = theme === 'dark' ? DARK_COLORS : LIGHT_COLORS;
 
   useEffect(() => {
@@ -113,10 +117,27 @@ const WalletIllustration: React.FC<IllustrationProps> = ({
       setDisplayBalance(Math.floor(value * 15420)); // Target balance: 15,420
     });
 
+    // Add listeners for transaction opacity animations
+    const transactionListeners = transactionAnims.map((anim, index) => {
+      return anim.opacity.addListener(({ value }) => {
+        setTransactionOpacities(prev => {
+          const newOpacities = [...prev];
+          newOpacities[index] = value;
+          return newOpacities;
+        });
+      });
+    });
+
     return () => {
       balanceCountAnim.removeListener(listener);
+      // Clean up transaction listeners
+      transactionAnims.forEach((anim, index) => {
+        if (transactionListeners[index]) {
+          anim.opacity.removeListener(transactionListeners[index]);
+        }
+      });
     };
-  }, [balanceCountAnim]);
+  }, [balanceCountAnim, transactionAnims]);
 
   const transactions = [
     { type: 'received', amount: '+2,500', description: 'Recharge Agent', icon: 'plus' },
@@ -210,44 +231,49 @@ const WalletIllustration: React.FC<IllustrationProps> = ({
           />
 
           {/* Transaction items */}
-          {transactions.map((transaction, index) => (
-            <G
-              key={index}
-              opacity={transactionAnims[index].opacity}
-            >
-              {/* Transaction row */}
-              <Rect
-                x="55"
-                y={100 + index * 12}
-                width="90"
-                height="10"
-                rx="2"
-                ry="2"
-                fill={colors.WHITE}
-                opacity="0.8"
-              />
-              
-              {/* Transaction icon */}
-              <Circle
-                cx="62"
-                cy={105 + index * 12}
-                r="3"
-                fill={transaction.type === 'received' ? colors.SUCCESS : colors.ERROR}
-              />
-              
-              {/* Amount indicator */}
-              <Rect
-                x="130"
-                y={102 + index * 12}
-                width="12"
-                height="6"
-                rx="1"
-                ry="1"
-                fill={transaction.type === 'received' ? colors.SUCCESS : colors.ERROR}
-                opacity="0.7"
-              />
-            </G>
-          ))}
+          {transactions.map((transaction, index) => {
+            // Use the state-based opacity value that we're updating via animation listeners
+            const opacity = transactionOpacities[index];
+
+            return (
+              <G
+                key={index}
+                opacity={opacity}
+              >
+                {/* Transaction row */}
+                <Rect
+                  x="55"
+                  y={100 + index * 12}
+                  width="90"
+                  height="10"
+                  rx="2"
+                  ry="2"
+                  fill={colors.WHITE}
+                  opacity="0.8"
+                />
+
+                {/* Transaction icon */}
+                <Circle
+                  cx="62"
+                  cy={105 + index * 12}
+                  r="3"
+                  fill={transaction.type === 'received' ? colors.SUCCESS : colors.ERROR}
+                />
+
+                {/* Amount indicator */}
+                <Rect
+                  x="130"
+                  y={102 + index * 12}
+                  width="12"
+                  height="6"
+                  rx="1"
+                  ry="1"
+                  fill={transaction.type === 'received' ? colors.SUCCESS : colors.ERROR}
+                  opacity="0.7"
+                />
+              </G>
+            );
+          })}
 
           {/* Wallet icon */}
           <G transform="translate(85, 160)">
@@ -277,11 +303,11 @@ const WalletIllustration: React.FC<IllustrationProps> = ({
               strokeWidth="1"
               strokeLinecap="round"
             />
-            
+
             {/* Bank icon */}
             <Circle cx="180" cy="60" r="8" fill={colors.INFO} opacity="0.7" />
             <Rect x="176" y="56" width="8" height="8" fill={colors.WHITE} opacity="0.8" />
-            
+
             {/* Voucher icon */}
             <Circle cx="180" cy="80" r="8" fill={colors.WARNING} opacity="0.7" />
             <Path

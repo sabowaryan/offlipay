@@ -2,17 +2,41 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { WalletService } from '@/services/WalletService';
+import { OnboardingService } from '@/services/OnboardingService';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import Logo from '@/components/Logo';
+import OnboardingContainer from '@/components/onboarding/OnboardingContainer';
 
 export default function IndexScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const { colors } = useThemeColors();
 
   useEffect(() => {
-    checkAuthStatus();
+    checkInitialFlow();
   }, []);
+
+  const checkInitialFlow = async () => {
+    try {
+      // First check if the user has seen the onboarding
+      const hasSeenOnboarding = await OnboardingService.hasSeenOnboarding();
+      
+      if (!hasSeenOnboarding) {
+        setShowOnboarding(true);
+        setLoading(false);
+        return;
+      }
+      
+      // If onboarding is completed, proceed with auth check
+      await checkAuthStatus();
+    } catch (error) {
+      console.error('Error during initial app flow check:', error);
+      // Fallback to auth screen in case of error
+      router.replace('/auth');
+      setLoading(false);
+    }
+  };
 
   const checkAuthStatus = async () => {
     try {
@@ -29,7 +53,30 @@ export default function IndexScreen() {
       setLoading(false);
     }
   };
+  
+  const handleOnboardingComplete = () => {
+    // When onboarding is completed, proceed to auth flow
+    setShowOnboarding(false);
+    checkAuthStatus();
+  };
+  
+  const handleOnboardingSkip = () => {
+    // When onboarding is skipped, proceed to auth flow
+    setShowOnboarding(false);
+    checkAuthStatus();
+  };
 
+  // Show onboarding if needed
+  if (showOnboarding) {
+    return (
+      <OnboardingContainer
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+      />
+    );
+  }
+
+  // Otherwise show loading screen
   return (
     <View style={[styles.container, { backgroundColor: colors.BACKGROUND }]}>
       <Logo size={120} style={styles.logo} />

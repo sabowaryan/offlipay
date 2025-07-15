@@ -18,9 +18,9 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import {
-  PanGestureHandler,
   GestureHandlerRootView,
-  State,
+  Gesture,
+  GestureDetector,
 } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/native';
@@ -68,7 +68,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
 
   // Refs
   const panRef = useRef(null);
-  const autoProgressTimer = useRef<NodeJS.Timeout | null>(null);
+  const autoProgressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load onboarding configuration
   useEffect(() => {
@@ -132,7 +132,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
         screenOpacity.value = withTiming(0, { duration: 200 }, () => {
           runOnJS(setCurrentScreen)(targetScreen);
           runOnJS(saveProgress)(targetScreen);
-          
+
           screenOpacity.value = withTiming(1, { duration: 300 }, () => {
             runOnJS(setIsAnimating)(false);
           });
@@ -207,28 +207,32 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
     );
   }, [skipEnabled, onSkip]);
 
-  // Handle swipe gestures
-  const handleSwipeGesture = useCallback(
-    (event: any) => {
-      if (event.nativeEvent.state === State.END && !isAnimating) {
-        const { translationX, velocityX } = event.nativeEvent;
+  // Create pan gesture handler using the new API
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-20, 20])
+    .failOffsetY([-10, 10])
+    .enabled(!isAnimating)
+    .onUpdate((event) => {
+      translateX.value = event.translationX;
+    })
+    .onEnd((event) => {
+      if (isAnimating) return;
 
-        // Determine swipe direction and strength
-        const isSwipeLeft = translationX < -SWIPE_THRESHOLD || velocityX < -SWIPE_VELOCITY_THRESHOLD;
-        const isSwipeRight = translationX > SWIPE_THRESHOLD || velocityX > SWIPE_VELOCITY_THRESHOLD;
+      const { translationX, velocityX } = event;
 
-        if (isSwipeLeft) {
-          handleNext();
-        } else if (isSwipeRight) {
-          handlePrevious();
-        }
+      // Determine swipe direction and strength
+      const isSwipeLeft = translationX < -SWIPE_THRESHOLD || velocityX < -SWIPE_VELOCITY_THRESHOLD;
+      const isSwipeRight = translationX > SWIPE_THRESHOLD || velocityX > SWIPE_VELOCITY_THRESHOLD;
 
-        // Reset gesture values
-        translateX.value = withSpring(0);
+      if (isSwipeLeft) {
+        runOnJS(handleNext)();
+      } else if (isSwipeRight) {
+        runOnJS(handlePrevious)();
       }
-    },
-    [isAnimating, handleNext, handlePrevious, translateX]
-  );
+
+      // Reset gesture values
+      translateX.value = withSpring(0);
+    });
 
   // Handle screen interaction
   const handleScreenInteraction = useCallback(() => {
@@ -341,13 +345,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
         )}
 
         {/* Main Content */}
-        <PanGestureHandler
-          ref={panRef}
-          onHandlerStateChange={handleSwipeGesture}
-          activeOffsetX={[-20, 20]}
-          failOffsetY={[-10, 10]}
-          enabled={!isAnimating}
-        >
+        <GestureDetector gesture={panGesture}>
           <Animated.View style={[styles.screenContainer, containerAnimatedStyle]}>
             <OnboardingScreen
               title={currentScreenConfig.title}
@@ -362,7 +360,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
               }
             />
           </Animated.View>
-        </PanGestureHandler>
+        </GestureDetector>
 
         {/* Navigation Controls */}
         <View style={styles.navigationContainer}>
@@ -374,9 +372,9 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
               disabled={isAnimating}
             />
           )}
-          
+
           <View style={styles.navigationSpacer} />
-          
+
           <OnboardingButton
             title={currentScreen === screens.length - 1 ? 'Commencer' : 'Suivant'}
             onPress={handleNext}

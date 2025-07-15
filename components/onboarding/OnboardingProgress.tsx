@@ -37,7 +37,7 @@ export const OnboardingProgress: React.FC<OnboardingProgressProps & { testID?: s
       dotAnimations.forEach((anim, index) => {
         const isActive = index < currentStep;
         const delay = index * 50; // Animation en cascade
-        
+
         Animated.timing(anim, {
           toValue: isActive ? 1 : 0,
           duration: 200,
@@ -65,11 +65,11 @@ export const OnboardingProgress: React.FC<OnboardingProgressProps & { testID?: s
       {/* Barre de progression */}
       <View style={styles.progressBarContainer}>
         <View style={styles.progressBarBackground} />
-        <Animated.View 
+        <Animated.View
           style={[
             styles.progressBarFill,
             { width: progressBarWidth }
-          ]} 
+          ]}
         />
       </View>
 
@@ -118,8 +118,8 @@ export const OnboardingProgress: React.FC<OnboardingProgressProps & { testID?: s
               style={[
                 styles.stepBar,
                 {
-                  backgroundColor: index < currentStep 
-                    ? colors.PRIMARY 
+                  backgroundColor: index < currentStep
+                    ? colors.PRIMARY
                     : colors.GRAY_LIGHT,
                 },
               ]}

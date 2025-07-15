@@ -16,10 +16,9 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import {
-  PanGestureHandler,
-  TapGestureHandler,
   GestureHandlerRootView,
-  State,
+  Gesture,
+  GestureDetector,
 } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -37,8 +36,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   interactionHint,
 }) => {
   const { colors, theme } = useThemeColors();
-  const tapRef = useRef(null);
-  const panRef = useRef(null);
 
   // Animation values
   const opacity = useSharedValue(0);
@@ -47,29 +44,34 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   const illustrationScale = useSharedValue(0.8);
   const illustrationOpacity = useSharedValue(0);
 
-  // Gesture handling
-  const handleTapGesture = (event: any) => {
-    if (event.nativeEvent.state === State.END && onInteraction) {
-      // Add haptic feedback
-      if (Platform.OS === 'ios') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  // Create gesture handlers using the new API
+  const tapGesture = Gesture.Tap()
+    .onEnd(() => {
+      if (onInteraction) {
+        // Add haptic feedback
+        if (Platform.OS === 'ios') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        onInteraction();
       }
-      onInteraction();
-    }
-  };
+    });
 
-  const handleSwipeGesture = (event: any) => {
-    if (event.nativeEvent.state === State.END) {
-      const { translationX, velocityX } = event.nativeEvent;
-      
+  const swipeGesture = Gesture.Pan()
+    .activeOffsetX([-20, 20])
+    .failOffsetY([-10, 10])
+    .onEnd((event) => {
+      const { translationX, velocityX } = event;
+
       // Detect swipe direction and threshold
       if (Math.abs(translationX) > 50 || Math.abs(velocityX) > 500) {
         if (onInteraction) {
           onInteraction();
         }
       }
-    }
-  };
+    });
+    
+  // Combine gestures
+  const combinedGestures = Gesture.Exclusive(tapGesture, swipeGesture);
 
   // Entry animations
   useEffect(() => {
@@ -79,7 +81,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         animationDelay,
         withTiming(1, { duration: 600 })
       );
-      
+
       translateY.value = withDelay(
         animationDelay,
         withSpring(0, {
@@ -87,7 +89,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
           stiffness: 150,
         })
       );
-      
+
       scale.value = withDelay(
         animationDelay,
         withSpring(1, {
@@ -101,7 +103,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         animationDelay + 200,
         withTiming(1, { duration: 800 })
       );
-      
+
       illustrationScale.value = withDelay(
         animationDelay + 200,
         withSpring(1, {
@@ -146,39 +148,29 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <PanGestureHandler
-        ref={panRef}
-        onHandlerStateChange={handleSwipeGesture}
-        activeOffsetX={[-10, 10]}
-        failOffsetY={[-5, 5]}
-      >
-        <TapGestureHandler
-          ref={tapRef}
-          onHandlerStateChange={handleTapGesture}
-          numberOfTaps={1}
-        >
-          <Animated.View style={[styles.content, containerAnimatedStyle]}>
-            {/* Illustration Container */}
-            <Animated.View style={[styles.illustrationContainer, illustrationAnimatedStyle]}>
-              <Illustration
-                animated={true}
-                theme={theme}
-                onAnimationComplete={() => {
-                  // Optional callback when illustration animation completes
-                }}
-              />
-            </Animated.View>
+      <GestureDetector gesture={combinedGestures}>
+        <Animated.View style={[styles.content, containerAnimatedStyle]}>
+          {/* Illustration Container */}
+          <Animated.View style={[styles.illustrationContainer, illustrationAnimatedStyle]}>
+            <Illustration
+              animated={true}
+              theme={theme}
+              onAnimationComplete={() => {
+                // Optional callback when illustration animation completes
+              }}
+            />
+          </Animated.View>
 
             {/* Text Content */}
             <View style={styles.textContainer}>
               <Text
                 style={[styles.title, { color: colors.TEXT }]}
                 accessibilityRole="header"
-                accessibilityLevel={1}
+                aria-level={1}
               >
                 {title}
               </Text>
-              
+
               <Text
                 style={[styles.subtitle, { color: colors.GRAY_MEDIUM }]}
                 accessibilityRole="text"
@@ -208,8 +200,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               accessible={true}
             />
           </Animated.View>
-        </TapGestureHandler>
-      </PanGestureHandler>
+      </GestureDetector>
     </GestureHandlerRootView>
   );
 };

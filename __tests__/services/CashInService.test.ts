@@ -3,11 +3,25 @@ import { StorageService } from '@/utils/storage';
 import { WalletService } from '@/services/WalletService';
 import { CashInMethod, Agent, Voucher, BankAccount, CashInTransaction } from '@/types';
 
+// Create a mock object with the methods we need
+const mockStorageService = {
+  getAgents: jest.fn(),
+  getVouchers: jest.fn(),
+  getBankAccounts: jest.fn(),
+  saveCashInTransaction: jest.fn(),
+  getCashInTransaction: jest.fn(),
+  updateCashInTransactionStatus: jest.fn(),
+  getCashInTransactions: jest.fn(),
+  markVoucherAsUsed: jest.fn(),
+  updateUser: jest.fn(),
+};
+
 // Mock des dépendances
-jest.mock('@/utils/storage');
+jest.mock('@/utils/storage', () => ({
+  StorageService: mockStorageService
+}));
 jest.mock('@/services/WalletService');
 
-const mockStorageService = StorageService as jest.Mocked<typeof StorageService>;
 const mockWalletService = WalletService as jest.Mocked<typeof WalletService>;
 
 describe('CashInService', () => {
@@ -228,7 +242,7 @@ describe('CashInService', () => {
       };
 
       mockWalletService.getCurrentUser = jest.fn().mockReturnValue(mockUser);
-      mockStorageService.saveCashInTransaction = jest.fn().mockResolvedValue();
+      mockStorageService.saveCashInTransaction = jest.fn().mockResolvedValue(undefined);
 
       const transactionData = {
         walletId: 'wallet1',
@@ -276,7 +290,7 @@ describe('CashInService', () => {
       };
 
       mockStorageService.getCashInTransaction = jest.fn().mockResolvedValue(mockTransaction);
-      mockStorageService.updateCashInTransactionStatus = jest.fn().mockResolvedValue();
+      mockStorageService.updateCashInTransactionStatus = jest.fn().mockResolvedValue(undefined);
 
       const result = await cashInService.processCashInTransaction('transaction1');
 
