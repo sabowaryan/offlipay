@@ -36,4 +36,11 @@ export const TYPO = StyleSheet.create({
     lineHeight: 18,
     letterSpacing: 0.01,
   },
+  button: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 20,
+    letterSpacing: 0.02,
+  },
 }); 

@@ -22,11 +22,11 @@ export class WalletService {
     if (!name.trim()) {
       throw new Error('Le nom est requis');
     }
-    
+
     if (!phone.trim()) {
       throw new Error('Le numéro de téléphone est requis');
     }
-    
+
     if (pin.length < 4) {
       throw new Error('Le PIN doit contenir au moins 4 chiffres');
     }
@@ -41,11 +41,11 @@ export class WalletService {
     let walletId: string;
     let attempts = 0;
     const maxAttempts = 10;
-    
+
     do {
       walletId = await CryptoUtils.generateWalletId();
       attempts++;
-      
+
       if (attempts > maxAttempts) {
         throw new Error('Impossible de générer un ID wallet unique');
       }
@@ -53,7 +53,7 @@ export class WalletService {
 
     const { publicKey, privateKey } = await CryptoUtils.generateKeyPair();
     const hashedPin = await CryptoUtils.hashPin(pin, walletId);
-    
+
     const user: User = {
       id: walletId,
       name: name.trim(),
@@ -68,7 +68,7 @@ export class WalletService {
 
     await StorageService.saveUser(user);
     await StorageService.storeSecureData('current_wallet', walletId);
-    
+
     this.currentUser = user;
     return user;
   }
@@ -79,7 +79,7 @@ export class WalletService {
     if (!walletId.trim()) {
       throw new Error('L\'ID Wallet est requis');
     }
-    
+
     if (!pin.trim()) {
       throw new Error('Le PIN est requis');
     }
@@ -130,7 +130,7 @@ export class WalletService {
 
     const transactions = await StorageService.getTransactions(walletId);
     const pendingTransactions = transactions.filter(t => t.status === 'pending');
-    
+
     const pendingAmount = pendingTransactions.reduce((sum, t) => {
       return sum + (t.type === 'sent' ? -t.amount : t.amount);
     }, 0);
@@ -154,7 +154,7 @@ export class WalletService {
 
     const nonce = await CryptoUtils.generateNonce();
     const timestamp = Date.now();
-    
+
     const paymentData: QRPaymentData = {
       amount,
       fromWalletId: this.currentUser.walletId,
@@ -180,7 +180,7 @@ export class WalletService {
     }
 
     const paymentData: QRPaymentData = CryptoUtils.parseQRData(qrData);
-    
+
     // Verify signature
     const dataToSign = `${paymentData.amount}${paymentData.fromWalletId}${paymentData.toWalletId}${paymentData.description}${paymentData.timestamp}${paymentData.nonce}`;
     const isValidSignature = await CryptoUtils.verifySignature(
@@ -215,10 +215,10 @@ export class WalletService {
     };
 
     // Update balance
-    const newBalance = isSender 
+    const newBalance = isSender
       ? this.currentUser.balance - paymentData.amount
       : this.currentUser.balance + paymentData.amount;
-    
+
     await StorageService.updateUserBalance(this.currentUser.walletId, newBalance);
     this.currentUser.balance = newBalance;
 
