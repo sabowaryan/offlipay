@@ -33,15 +33,11 @@ import OnboardingScreen from './OnboardingScreen';
 import { OnboardingProgress } from './OnboardingProgress';
 import OnboardingButton from './OnboardingButton';
 import {
-  usePerformanceMonitoring,
-  measurePerformance,
-  createPerformanceAwareTimeout,
-  canHandleComplexOperation
-} from './utils/performanceMonitor';
-import {
+  deferHeavyOperation,
+  batchAsyncOperations,
   getOptimizedAnimationConfig,
-  shouldUseComplexAnimations
-} from './utils/performanceOptimization';
+  getDeviceCapabilities
+} from '@/utils/performanceOptimizer';
 
 // Import illustrations
 import WelcomeIllustration from './illustrations/WelcomeIllustration';
@@ -71,21 +67,9 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [skipEnabled, setSkipEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
-  const [performanceMode, setPerformanceMode] = useState(false);
-
-  // Performance monitoring
-  const {
-    startMonitoring,
-    stopMonitoring,
-    recordLoadTime,
-    recordInteraction,
-    recordAnimationCompletion,
-    getRecommendations,
-    onPerformanceDegradation,
-  } = usePerformanceMonitoring();
-
-  // Get optimized configuration
-  const useComplexAnimations = shouldUseComplexAnimations() && !performanceMode;
+  // Get device capabilities for performance optimization
+  const deviceCapabilities = getDeviceCapabilities();
+  const animationConfig = getOptimizedAnimationConfig();
 
   // Animation values
   const translateX = useSharedValue(0);
@@ -97,71 +81,61 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   const autoProgressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadStartTime = useRef<number>(Date.now());
 
-  // Performance monitoring setup
+  // Simplified initialization - no heavy performance monitoring
   useEffect(() => {
-    startMonitoring();
-
-    // Set up performance degradation handler
-    const unsubscribe = onPerformanceDegradation(() => {
-      console.warn('[Onboarding] Performance degradation detected, enabling performance mode');
-      setPerformanceMode(true);
-
-      // Get and log recommendations
-      const recommendations = getRecommendations();
-      console.log('[Onboarding] Performance recommendations:', recommendations);
+    // Just initialize the progress indicator
+    progressOpacity.value = withTiming(1, {
+      duration: animationConfig.duration,
     });
+  }, []);
 
-    return () => {
-      stopMonitoring();
-      unsubscribe();
-    };
-  }, [startMonitoring, stopMonitoring, onPerformanceDegradation, getRecommendations]);
-
-  // Load onboarding configuration with performance measurement
+  // Load onboarding configuration with optimized performance
   useEffect(() => {
-    const loadOnboardingConfig = measurePerformance(async () => {
+    const loadOnboardingConfig = async () => {
       try {
         setIsLoading(true);
         loadStartTime.current = Date.now();
 
         // Use InteractionManager to ensure smooth loading
         await InteractionManager.runAfterInteractions(async () => {
-          const [screensConfig, settings] = await Promise.all([
+          // Batch async operations for better performance
+          const [screensResult, settingsResult, stateResult] = await Promise.allSettled([
             OnboardingService.getScreensConfig(),
             OnboardingService.getOnboardingSettings(),
+            OnboardingService.getOnboardingState(),
           ]);
 
-          setScreens(screensConfig);
-          setSkipEnabled(settings.skipEnabled);
-
-          // Restore progress if user was in the middle of onboarding
-          const state = await OnboardingService.getOnboardingState();
-          if (state.currentScreen > 0 && state.currentScreen < screensConfig.length) {
-            setCurrentScreen(state.currentScreen);
+          if (screensResult.status === 'fulfilled') {
+            setScreens(screensResult.value);
           }
 
-          // Record load time
-          const loadTime = Date.now() - loadStartTime.current;
-          recordLoadTime('onboarding-config-load', loadTime);
+          if (settingsResult.status === 'fulfilled') {
+            setSkipEnabled(settingsResult.value.skipEnabled);
+          }
 
-          // Animate progress indicator in with performance-aware timing
-          const animationDuration = useComplexAnimations ? 500 : 300;
-          progressOpacity.value = withTiming(1, {
-            duration: animationDuration,
-          });
+          // Restore progress if user was in the middle of onboarding
+          if (stateResult.status === 'fulfilled' && screensResult.status === 'fulfilled') {
+            const state = stateResult.value;
+            if (state.currentScreen > 0 && state.currentScreen < screensResult.value.length) {
+              setCurrentScreen(state.currentScreen);
+            }
+          }
+
+          const loadTime = Date.now() - loadStartTime.current;
+          if (loadTime > 100) {
+            console.log(`[Performance] Onboarding config loaded in ${loadTime}ms`);
+          }
         });
       } catch (error) {
         console.error('Erreur lors du chargement de la configuration d\'onboarding:', error);
-        // Fallback to default configuration
         setScreens([]);
-        recordLoadTime('onboarding-config-load-error', Date.now() - loadStartTime.current);
       } finally {
         setIsLoading(false);
       }
-    }, 'onboarding-initialization');
+    };
 
     loadOnboardingConfig();
-  }, [recordLoadTime, useComplexAnimations]);
+  }, []);
 
   // Save progress automatically
   const saveProgress = useCallback(async (screenIndex: number) => {
@@ -188,10 +162,10 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
         autoProgressTimer.current = null;
       }
 
-      if (animated && canHandleComplexOperation()) {
-        // Use performance-aware animation durations
-        const exitDuration = useComplexAnimations ? 200 : 150;
-        const enterDuration = useComplexAnimations ? 300 : 200;
+      if (animated && deviceCapabilities.supportsComplexAnimations) {
+        // Use optimized animation durations
+        const exitDuration = animationConfig.duration * 0.7;
+        const enterDuration = animationConfig.duration;
 
         // Animate screen transition
         screenOpacity.value = withTiming(0, {
@@ -204,30 +178,21 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
             duration: enterDuration,
           }, () => {
             runOnJS(setIsAnimating)(false);
-            runOnJS(() => {
-              const navigationTime = Date.now() - navigationStartTime;
-              recordInteraction(navigationTime);
-              recordAnimationCompletion(true);
-            })();
           });
         });
       } else {
-        // Simplified navigation for performance mode or low-end devices
+        // Simplified navigation for low-end devices
         setCurrentScreen(targetScreen);
         await saveProgress(targetScreen);
         setIsAnimating(false);
-
-        const navigationTime = Date.now() - navigationStartTime;
-        recordInteraction(navigationTime);
-        recordAnimationCompletion(false); // No animation used
       }
 
-      // Haptic feedback (only on capable devices)
-      if (Platform.OS === 'ios' && canHandleComplexOperation()) {
+      // Haptic feedback (only on iOS)
+      if (Platform.OS === 'ios' && deviceCapabilities.supportsHeavyOperations) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
     },
-    [isAnimating, screens.length, screenOpacity, saveProgress, useComplexAnimations, recordInteraction, recordAnimationCompletion]
+    [isAnimating, screens.length, screenOpacity, saveProgress, deviceCapabilities, animationConfig]
   );
 
   // Handle next screen
@@ -405,8 +370,11 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
         {/* Progress Indicator */}
         <Animated.View style={[styles.progressContainer, progressAnimatedStyle]}>
           <OnboardingProgress
-            currentStep={currentScreen + 1}
-            totalSteps={screens.length}
+            currentScreen={currentScreen + 1}
+            totalScreens={screens.length}
+            currentSlide={1}
+            totalSlides={1}
+            style="dots"
             animated={true}
           />
         </Animated.View>

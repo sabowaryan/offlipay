@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { View, InteractionManager } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
@@ -45,17 +46,33 @@ export default Sentry.wrap(function RootLayout() {
 
   useEffect(() => {
     if (loaded || error) {
-      SplashScreen.hideAsync();
+      // Delay splash screen hiding to prevent flash
+      setTimeout(() => SplashScreen.hideAsync(), 100);
     }
   }, [loaded, error]);
 
   useEffect(() => {
-    // Initialize database when app starts
-    StorageService.initializeDatabase().catch(console.error);
+    // Initialize database asynchronously without blocking render
+    const initDB = async () => {
+      try {
+        await StorageService.initializeDatabase();
+      } catch (error) {
+        console.error('Database initialization failed:', error);
+      }
+    };
+    
+    // Use InteractionManager to defer heavy operations
+    const task = InteractionManager.runAfterInteractions(initDB);
+    return () => task.cancel();
   }, []);
 
+  // Show loading state immediately instead of null
   if (!loaded && !error) {
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' }}>
+        {/* Minimal loading indicator */}
+      </View>
+    );
   }
 
   return (

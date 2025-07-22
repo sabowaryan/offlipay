@@ -55,20 +55,20 @@ jest.mock('react-native-reanimated', () => {
       value: 0,
     }),
     useAnimatedStyle: () => ({}),
-    withTiming: (toValue, options, callback) => {
+    withTiming: (toValue: any, options?: any, callback?: any) => {
       if (callback) {
         callback(true);
       }
       return toValue;
     },
-    withDelay: (delay, animation) => animation,
-    withSpring: (toValue, options, callback) => {
+    withDelay: (delay: any, animation: any) => animation,
+    withSpring: (toValue: any, options?: any, callback?: any) => {
       if (callback) {
         callback(true);
       }
       return toValue;
     },
-    runOnJS: (fn) => fn,
+    runOnJS: (fn: any) => fn,
     interpolate: () => 0,
   };
 });
@@ -101,28 +101,28 @@ jest.mock('react-native-gesture-handler', () => {
 // Mock the illustrations
 jest.mock('@/components/onboarding/illustrations/WelcomeIllustration', () => {
   const { View } = require('react-native');
-  return function MockWelcomeIllustration(props) {
+  return function MockWelcomeIllustration(props: any) {
     return <View testID="welcome-illustration" />;
   };
 });
 
 jest.mock('@/components/onboarding/illustrations/QRPaymentIllustration', () => {
   const { View } = require('react-native');
-  return function MockQRPaymentIllustration(props) {
+  return function MockQRPaymentIllustration(props: any) {
     return <View testID="qr-payment-illustration" />;
   };
 });
 
 jest.mock('@/components/onboarding/illustrations/WalletIllustration', () => {
   const { View } = require('react-native');
-  return function MockWalletIllustration(props) {
+  return function MockWalletIllustration(props: any) {
     return <View testID="wallet-illustration" />;
   };
 });
 
 jest.mock('@/components/onboarding/illustrations/OfflineIllustration', () => {
   const { View } = require('react-native');
-  return function MockOfflineIllustration(props) {
+  return function MockOfflineIllustration(props: any) {
     return <View testID="offline-illustration" />;
   };
 });
@@ -182,37 +182,37 @@ describe('Onboarding Integration Tests', () => {
     // First screen - Welcome
     expect(getByText('Bienvenue sur OffliPay')).toBeTruthy();
     expect(getByText('Votre portefeuille numérique pour des paiements simples et sécurisés, même hors ligne')).toBeTruthy();
-    
+
     // Navigate to next screen
     fireEvent.press(getByText('Suivant'));
-    
+
     // Second screen - QR Payments
     await waitFor(() => {
       expect(getByText('Payez en un scan')).toBeTruthy();
     });
     expect(getByText('Scannez ou générez des QR codes pour des transactions instantanées')).toBeTruthy();
-    
+
     // Navigate to next screen
     fireEvent.press(getByText('Suivant'));
-    
+
     // Third screen - Wallet
     await waitFor(() => {
       expect(getByText('Gérez votre argent')).toBeTruthy();
     });
     expect(getByText('Rechargez facilement via agents, vouchers ou virement bancaire')).toBeTruthy();
-    
+
     // Navigate to next screen
     fireEvent.press(getByText('Suivant'));
-    
+
     // Fourth screen - Offline
     await waitFor(() => {
       expect(getByText('Toujours connecté')).toBeTruthy();
     });
     expect(getByText('Effectuez des paiements même sans connexion internet')).toBeTruthy();
-    
+
     // Complete onboarding
     fireEvent.press(getByText('Commencer'));
-    
+
     // Verify onboarding was completed
     await waitFor(() => {
       expect(onCompleteMock).toHaveBeenCalledTimes(1);
@@ -242,14 +242,14 @@ describe('Onboarding Integration Tests', () => {
     // Find and press skip button
     const skipButton = getByText('Ignorer');
     fireEvent.press(skipButton);
-    
+
     // Confirm skip in alert
     await waitFor(() => {
       // Find the "Ignorer" button in the alert dialog
       const alertIgnoreButton = getByText('Ignorer');
       fireEvent.press(alertIgnoreButton);
     });
-    
+
     // Verify onboarding was skipped
     await waitFor(() => {
       expect(onSkipMock).toHaveBeenCalledTimes(1);
@@ -273,7 +273,7 @@ describe('Onboarding Integration Tests', () => {
       totalScreens: 4,
       version: '1.0.0',
     };
-    
+
     mockAsyncStorage.getItem.mockImplementation((key) => {
       if (key === 'onboarding_state') {
         return Promise.resolve(JSON.stringify(mockState));
@@ -294,7 +294,7 @@ describe('Onboarding Integration Tests', () => {
     await waitFor(() => {
       expect(getByText('Gérez votre argent')).toBeTruthy();
     });
-    
+
     // Should not show the first screen
     expect(queryByText('Bienvenue sur OffliPay')).toBeNull();
   });
@@ -308,7 +308,7 @@ describe('Onboarding Integration Tests', () => {
       skipEnabled: true,
       progressIndicatorStyle: 'dots',
     };
-    
+
     mockAsyncStorage.getItem.mockImplementation((key) => {
       if (key === 'onboarding_preferences') {
         return Promise.resolve(JSON.stringify(mockPreferences));
@@ -349,7 +349,7 @@ describe('Onboarding Integration Tests', () => {
   it('should handle storage errors gracefully', async () => {
     // Mock storage error
     mockAsyncStorage.getItem.mockRejectedValue(new Error('Storage error'));
-    
+
     const onCompleteMock = jest.fn();
     const onSkipMock = jest.fn();
 
@@ -383,14 +383,14 @@ describe('Onboarding Integration Tests', () => {
 
     // Navigate to second screen
     fireEvent.press(getByText('Suivant'));
-    
+
     await waitFor(() => {
       expect(getByText('Payez en un scan')).toBeTruthy();
     });
-    
+
     // Navigate back to first screen
     fireEvent.press(getByText('Précédent'));
-    
+
     await waitFor(() => {
       expect(getByText('Bienvenue sur OffliPay')).toBeTruthy();
     });

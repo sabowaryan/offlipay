@@ -53,20 +53,20 @@ jest.mock('react-native-reanimated', () => {
       value: 0,
     }),
     useAnimatedStyle: () => ({}),
-    withTiming: (toValue, options, callback) => {
+    withTiming: (toValue: any, options?: any, callback?: any) => {
       if (callback) {
         callback(true);
       }
       return toValue;
     },
-    withDelay: (delay, animation) => animation,
-    withSpring: (toValue, options, callback) => {
+    withDelay: (delay: any, animation: any) => animation,
+    withSpring: (toValue: any, options?: any, callback?: any) => {
       if (callback) {
         callback(true);
       }
       return toValue;
     },
-    runOnJS: (fn) => fn,
+    runOnJS: (fn: any) => fn,
     interpolate: () => 0,
   };
 });
@@ -99,28 +99,28 @@ jest.mock('react-native-gesture-handler', () => {
 // Mock the illustrations
 jest.mock('@/components/onboarding/illustrations/WelcomeIllustration', () => {
   const { View } = require('react-native');
-  return function MockWelcomeIllustration(props) {
+  return function MockWelcomeIllustration(props: any) {
     return <View testID="welcome-illustration" />;
   };
 });
 
 jest.mock('@/components/onboarding/illustrations/QRPaymentIllustration', () => {
   const { View } = require('react-native');
-  return function MockQRPaymentIllustration(props) {
+  return function MockQRPaymentIllustration(props: any) {
     return <View testID="qr-payment-illustration" />;
   };
 });
 
 jest.mock('@/components/onboarding/illustrations/WalletIllustration', () => {
   const { View } = require('react-native');
-  return function MockWalletIllustration(props) {
+  return function MockWalletIllustration(props: any) {
     return <View testID="wallet-illustration" />;
   };
 });
 
 jest.mock('@/components/onboarding/illustrations/OfflineIllustration', () => {
   const { View } = require('react-native');
-  return function MockOfflineIllustration(props) {
+  return function MockOfflineIllustration(props: any) {
     return <View testID="offline-illustration" />;
   };
 });
@@ -204,7 +204,7 @@ describe('Onboarding Error Recovery Tests', () => {
 
     // Navigate to next screen - this should trigger saveProgress
     fireEvent.press(getByText('Suivant'));
-    
+
     // Should still navigate despite storage error
     await waitFor(() => {
       expect(getByText('Payez en un scan')).toBeTruthy();
@@ -238,16 +238,16 @@ describe('Onboarding Error Recovery Tests', () => {
     // Navigate through all screens
     fireEvent.press(getByText('Suivant'));
     await waitFor(() => expect(getByText('Payez en un scan')).toBeTruthy());
-    
+
     fireEvent.press(getByText('Suivant'));
     await waitFor(() => expect(getByText('Gérez votre argent')).toBeTruthy());
-    
+
     fireEvent.press(getByText('Suivant'));
     await waitFor(() => expect(getByText('Toujours connecté')).toBeTruthy());
-    
+
     // Complete onboarding - this should fail storage but still call onComplete
     fireEvent.press(getByText('Commencer'));
-    
+
     // Should still complete despite storage error
     await waitFor(() => {
       expect(onCompleteMock).toHaveBeenCalledTimes(1);
@@ -288,7 +288,7 @@ describe('Onboarding Error Recovery Tests', () => {
       totalScreens: 4,
       version: '0.9.0', // Old version
     };
-    
+
     mockAsyncStorage.getItem.mockImplementation((key) => {
       if (key === 'onboarding_state') {
         return Promise.resolve(JSON.stringify(oldVersionState));
@@ -338,7 +338,7 @@ describe('Onboarding Error Recovery Tests', () => {
     // Find and press skip button
     const skipButton = getByText('Ignorer');
     fireEvent.press(skipButton);
-    
+
     // Should still skip despite storage error
     await waitFor(() => {
       expect(onSkipMock).toHaveBeenCalledTimes(1);

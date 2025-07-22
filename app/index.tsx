@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, InteractionManager } from 'react-native';
 import { useRouter } from 'expo-router';
 import { WalletService } from '@/services/WalletService';
 import { OnboardingService } from '@/services/OnboardingService';
@@ -14,26 +14,39 @@ export default function IndexScreen() {
   const { colors } = useThemeColors();
 
   useEffect(() => {
-    checkInitialFlow();
+    // Use InteractionManager to defer heavy operations until after render
+    const task = InteractionManager.runAfterInteractions(() => {
+      checkInitialFlow();
+    });
+    
+    return () => task.cancel();
   }, []);
 
   const checkInitialFlow = async () => {
     try {
-      // First check if the user has seen the onboarding
-      const hasSeenOnboarding = await OnboardingService.hasSeenOnboarding();
+      // Batch async operations to reduce sequential delays
+      const [hasSeenOnboarding, user] = await Promise.allSettled([
+        OnboardingService.hasSeenOnboarding(),
+        WalletService.loadCurrentUser()
+      ]);
       
-      if (!hasSeenOnboarding) {
+      // Handle onboarding check
+      if (hasSeenOnboarding.status === 'fulfilled' && !hasSeenOnboarding.value) {
         setShowOnboarding(true);
         setLoading(false);
         return;
       }
       
-      // If onboarding is completed, proceed with auth check
-      await checkAuthStatus();
+      // Handle auth check
+      if (user.status === 'fulfilled' && user.value) {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/auth');
+      }
     } catch (error) {
       console.error('Error during initial app flow check:', error);
-      // Fallback to auth screen in case of error
       router.replace('/auth');
+    } finally {
       setLoading(false);
     }
   };

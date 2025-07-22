@@ -19,7 +19,7 @@ jest.mock('@/hooks/useThemeColors', () => ({
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');
-  Reanimated.default.call = () => {};
+  Reanimated.default.call = () => { };
   return Reanimated;
 });
 
@@ -41,35 +41,35 @@ jest.mock('react-native-gesture-handler', () => ({
 // Network simulation utilities
 class NetworkSimulator {
   private originalFetch: typeof global.fetch;
-  
+
   constructor() {
     this.originalFetch = global.fetch;
   }
-  
+
   simulateSlowNetwork(delay: number) {
-    global.fetch = jest.fn().mockImplementation(async (...args) => {
+    global.fetch = jest.fn().mockImplementation(async (...args: Parameters<typeof fetch>) => {
       await new Promise(resolve => setTimeout(resolve, delay));
       return this.originalFetch(...args);
     });
   }
-  
+
   simulateNetworkError() {
     global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
   }
-  
+
   simulateIntermittentConnection(failureRate: number = 0.3) {
-    global.fetch = jest.fn().mockImplementation(async (...args) => {
+    global.fetch = jest.fn().mockImplementation(async (...args: Parameters<typeof fetch>) => {
       if (Math.random() < failureRate) {
         throw new Error('Connection timeout');
       }
       return this.originalFetch(...args);
     });
   }
-  
+
   simulateOfflineMode() {
     global.fetch = jest.fn().mockRejectedValue(new Error('Network request failed'));
   }
-  
+
   restore() {
     global.fetch = this.originalFetch;
   }
@@ -81,7 +81,7 @@ describe('Onboarding Network Performance Tests', () => {
 
   beforeEach(() => {
     networkSimulator = new NetworkSimulator();
-    
+
     // Mock OnboardingService
     mockOnboardingService = {
       getScreensConfig: jest.fn(),
@@ -113,10 +113,10 @@ describe('Onboarding Network Performance Tests', () => {
     });
 
     mockOnboardingService.getOnboardingState.mockResolvedValue({
-      currentScreen: 0,
-      totalScreens: 1,
-      isAnimating: false,
       hasSeenOnboarding: false,
+      currentScreen: 0,
+      totalScreens: 4,
+      version: '1.0.0',
     });
 
     // Replace the actual service with our mock
@@ -134,16 +134,16 @@ describe('Onboarding Network Performance Tests', () => {
     it('should handle slow network conditions gracefully', async () => {
       // Simulate 2G network (500ms delay)
       networkSimulator.simulateSlowNetwork(500);
-      
+
       const startTime = Date.now();
-      
+
       const { getByTestId } = render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       await waitFor(() => {
         const loadTime = Date.now() - startTime;
         // Should still load within reasonable time even on slow network
@@ -154,16 +154,16 @@ describe('Onboarding Network Performance Tests', () => {
     it('should handle 3G network conditions', async () => {
       // Simulate 3G network (200ms delay)
       networkSimulator.simulateSlowNetwork(200);
-      
+
       const startTime = Date.now();
-      
+
       render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       await waitFor(() => {
         const loadTime = Date.now() - startTime;
         // Should meet the 2-second requirement on 3G
@@ -174,16 +174,16 @@ describe('Onboarding Network Performance Tests', () => {
     it('should handle edge network conditions', async () => {
       // Simulate EDGE network (1000ms delay)
       networkSimulator.simulateSlowNetwork(1000);
-      
+
       const startTime = Date.now();
-      
+
       render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       await waitFor(() => {
         const loadTime = Date.now() - startTime;
         // Should eventually load even on very slow network
@@ -195,17 +195,17 @@ describe('Onboarding Network Performance Tests', () => {
   describe('Network Error Handling', () => {
     it('should handle network errors gracefully', async () => {
       networkSimulator.simulateNetworkError();
-      
+
       // Mock service to return fallback data
       mockOnboardingService.getScreensConfig.mockRejectedValue(new Error('Network error'));
-      
+
       const { queryByText } = render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       await waitFor(() => {
         // Should not crash and should show some content or loading state
         expect(true).toBe(true); // Component should render without throwing
@@ -230,14 +230,14 @@ describe('Onboarding Network Performance Tests', () => {
           },
         ];
       });
-      
+
       render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       await waitFor(() => {
         expect(callCount).toBeGreaterThan(1); // Should have retried
       });
@@ -245,16 +245,16 @@ describe('Onboarding Network Performance Tests', () => {
 
     it('should handle intermittent connection issues', async () => {
       networkSimulator.simulateIntermittentConnection(0.5); // 50% failure rate
-      
+
       const startTime = Date.now();
-      
+
       render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       await waitFor(() => {
         const loadTime = Date.now() - startTime;
         // Should eventually succeed despite intermittent failures
@@ -272,32 +272,32 @@ describe('Onboarding Network Performance Tests', () => {
           onSkip={jest.fn()}
         />
       );
-      
+
       await waitFor(() => {
         expect(mockOnboardingService.getScreensConfig).toHaveBeenCalled();
       });
-      
+
       // Now simulate offline mode
       networkSimulator.simulateOfflineMode();
-      
+
       const { unmount } = render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       // Should still work with cached/fallback data
       await waitFor(() => {
         expect(true).toBe(true); // Should not crash
       });
-      
+
       unmount();
     });
 
     it('should handle offline mode gracefully on first launch', async () => {
       networkSimulator.simulateOfflineMode();
-      
+
       // Mock service to use fallback data
       mockOnboardingService.getScreensConfig.mockImplementation(async () => {
         // Simulate fallback to local/default configuration
@@ -312,16 +312,16 @@ describe('Onboarding Network Performance Tests', () => {
           },
         ];
       });
-      
+
       const startTime = Date.now();
-      
+
       render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       await waitFor(() => {
         const loadTime = Date.now() - startTime;
         // Should load quickly from local data
@@ -335,7 +335,7 @@ describe('Onboarding Network Performance Tests', () => {
       // Simulate slow loading of non-critical assets
       let criticalLoaded = false;
       let nonCriticalLoaded = false;
-      
+
       mockOnboardingService.getScreensConfig.mockImplementation(async () => {
         criticalLoaded = true;
         return [
@@ -349,7 +349,7 @@ describe('Onboarding Network Performance Tests', () => {
           },
         ];
       });
-      
+
       // Simulate slow loading of settings
       mockOnboardingService.getOnboardingSettings.mockImplementation(async () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -362,22 +362,22 @@ describe('Onboarding Network Performance Tests', () => {
           progressIndicatorStyle: 'dots',
         };
       });
-      
+
       render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       // Critical content should load first
       await waitFor(() => {
         expect(criticalLoaded).toBe(true);
       });
-      
+
       // Non-critical content may still be loading
       expect(nonCriticalLoaded).toBe(false);
-      
+
       // Eventually all content should load
       await waitFor(() => {
         expect(nonCriticalLoaded).toBe(true);
@@ -399,14 +399,14 @@ describe('Onboarding Network Performance Tests', () => {
           },
         ];
       });
-      
+
       const { queryByTestId } = render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       // Should show loading state initially
       // (This would depend on the actual loading UI implementation)
       await waitFor(() => {
@@ -418,7 +418,7 @@ describe('Onboarding Network Performance Tests', () => {
   describe('Bandwidth Optimization', () => {
     it('should minimize network requests', async () => {
       let requestCount = 0;
-      
+
       mockOnboardingService.getScreensConfig.mockImplementation(async () => {
         requestCount++;
         return [
@@ -432,7 +432,7 @@ describe('Onboarding Network Performance Tests', () => {
           },
         ];
       });
-      
+
       // Render multiple times
       for (let i = 0; i < 3; i++) {
         const { unmount } = render(
@@ -441,14 +441,14 @@ describe('Onboarding Network Performance Tests', () => {
             onSkip={jest.fn()}
           />
         );
-        
+
         await act(async () => {
           await new Promise(resolve => setTimeout(resolve, 100));
         });
-        
+
         unmount();
       }
-      
+
       // Should cache results and minimize requests
       expect(requestCount).toBeLessThanOrEqual(3); // Ideally 1, but allow for some retries
     });
@@ -456,15 +456,15 @@ describe('Onboarding Network Performance Tests', () => {
     it('should handle concurrent requests efficiently', async () => {
       let concurrentRequests = 0;
       let maxConcurrent = 0;
-      
+
       mockOnboardingService.getScreensConfig.mockImplementation(async () => {
         concurrentRequests++;
         maxConcurrent = Math.max(maxConcurrent, concurrentRequests);
-        
+
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         concurrentRequests--;
-        
+
         return [
           {
             id: 'welcome',
@@ -476,7 +476,7 @@ describe('Onboarding Network Performance Tests', () => {
           },
         ];
       });
-      
+
       // Start multiple renders simultaneously
       const renders = Array.from({ length: 5 }, () =>
         render(
@@ -486,11 +486,11 @@ describe('Onboarding Network Performance Tests', () => {
           />
         )
       );
-      
+
       await waitFor(() => {
         expect(maxConcurrent).toBeLessThanOrEqual(2); // Should limit concurrent requests
       });
-      
+
       // Cleanup
       renders.forEach(({ unmount }) => unmount());
     });

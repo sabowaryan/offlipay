@@ -56,6 +56,9 @@ export class OnboardingError extends Error {
 }
 
 export class OnboardingService {
+    static hasCompletedOnboarding() {
+      throw new Error('Method not implemented.');
+    }
     private static readonly ONBOARDING_STATE_KEY = 'onboarding_state';
     private static readonly ONBOARDING_PREFERENCES_KEY = 'onboarding_preferences';
     private static readonly ONBOARDING_VERSION = '1.0.0';

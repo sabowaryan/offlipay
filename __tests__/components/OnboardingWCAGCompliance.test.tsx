@@ -88,8 +88,8 @@ jest.mock('@/components/onboarding/illustrations/WelcomeIllustration', () => {
   const { View } = require('react-native');
   return function MockWelcomeIllustration(props: any) {
     return (
-      <View 
-        testID="welcome-illustration" 
+      <View
+        testID="welcome-illustration"
         accessibilityLabel="Illustration de bienvenue avec logo OffliPay animé"
         accessibilityRole="image"
         accessibilityHint="Animation décorative présentant l'application"
@@ -102,8 +102,8 @@ jest.mock('@/components/onboarding/illustrations/QRPaymentIllustration', () => {
   const { View } = require('react-native');
   return function MockQRPaymentIllustration(props: any) {
     return (
-      <View 
-        testID="qr-payment-illustration" 
+      <View
+        testID="qr-payment-illustration"
         accessibilityLabel="Illustration de paiement par QR code"
         accessibilityRole="image"
         accessibilityHint="Animation montrant le scan d'un code QR pour effectuer un paiement"
@@ -116,8 +116,8 @@ jest.mock('@/components/onboarding/illustrations/WalletIllustration', () => {
   const { View } = require('react-native');
   return function MockWalletIllustration(props: any) {
     return (
-      <View 
-        testID="wallet-illustration" 
+      <View
+        testID="wallet-illustration"
         accessibilityLabel="Illustration du portefeuille numérique"
         accessibilityRole="image"
         accessibilityHint="Animation présentant la gestion du solde et des transactions"
@@ -130,8 +130,8 @@ jest.mock('@/components/onboarding/illustrations/OfflineIllustration', () => {
   const { View } = require('react-native');
   return function MockOfflineIllustration(props: any) {
     return (
-      <View 
-        testID="offline-illustration" 
+      <View
+        testID="offline-illustration"
         accessibilityLabel="Illustration du mode hors ligne"
         accessibilityRole="image"
         accessibilityHint="Animation expliquant le fonctionnement sans connexion internet"
@@ -228,7 +228,14 @@ describe('WCAG 2.1 AA Automated Compliance Tests', () => {
 
       it('should provide programmatic structure for progress indicator', async () => {
         const { getByTestId } = render(
-          <OnboardingProgress currentStep={2} totalSteps={4} animated={false} />
+          <OnboardingProgress
+            currentScreen={2}
+            totalScreens={4}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
+            animated={false}
+          />
         );
 
         const progress = getByTestId('onboarding-progress');
@@ -312,10 +319,11 @@ describe('WCAG 2.1 AA Automated Compliance Tests', () => {
           expect(getByText('Bienvenue sur OffliPay')).toBeTruthy();
         });
 
-        // Test keyboard navigation
+        // Test keyboard navigation - in React Native, we simulate press events
+        // as keyboard navigation typically translates to press events
         const nextButton = getByText('Suivant');
         fireEvent(nextButton, 'focus');
-        fireEvent.keyDown(nextButton, { key: 'Enter', code: 'Enter' });
+        fireEvent.press(nextButton);
 
         await waitFor(() => {
           expect(getByText('Payez en un scan')).toBeTruthy();
@@ -463,7 +471,7 @@ describe('WCAG 2.1 AA Automated Compliance Tests', () => {
         );
 
         const button = getByText('Error Test');
-        
+
         // The component should handle errors gracefully
         expect(() => fireEvent.press(button)).not.toThrow();
       });

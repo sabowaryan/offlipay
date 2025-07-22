@@ -59,7 +59,7 @@ describe('Expérience de première utilisation - Onboarding', () => {
     (SecureStore.deleteItemAsync as jest.Mock).mockClear();
     (SecureStore.getItemAsync as jest.Mock).mockClear();
     (SecureStore.setItemAsync as jest.Mock).mockClear();
-    
+
     // Simuler un nouvel utilisateur (pas d'onboarding complété)
     (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
   });
@@ -70,21 +70,22 @@ describe('Expérience de première utilisation - Onboarding', () => {
 
   describe('Détection du statut de nouvel utilisateur', () => {
     it('devrait détecter un nouvel utilisateur correctement', async () => {
-      const hasCompleted = await OnboardingService.hasCompletedOnboarding();
-      expect(hasCompleted).toBe(false);
+      const hasSeen = await OnboardingService.hasSeenOnboarding();
+      expect(hasSeen).toBe(false);
     });
 
     it('devrait détecter un utilisateur existant correctement', async () => {
-      // Simuler un utilisateur qui a déjà complété l'onboarding
-      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(
+      // Simuler un utilisateur qui a déjà vu l'onboarding
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
         JSON.stringify({
-          hasCompletedOnboarding: true,
+          hasSeenOnboarding: true,
           completedAt: new Date().toISOString(),
+          version: '1.0.0',
         })
       );
 
-      const hasCompleted = await OnboardingService.hasCompletedOnboarding();
-      expect(hasCompleted).toBe(true);
+      const hasSeen = await OnboardingService.hasSeenOnboarding();
+      expect(hasSeen).toBe(true);
     });
   });
 
@@ -324,18 +325,18 @@ describe('Expérience de première utilisation - Onboarding', () => {
 
       // Naviguer jusqu'à la fin
       const nextButton = getByTestId('onboarding-next-button');
-      
+
       // Écran 1 -> 2
       fireEvent.press(nextButton);
-      await waitFor(() => {});
-      
+      await waitFor(() => { });
+
       // Écran 2 -> 3
       fireEvent.press(nextButton);
-      await waitFor(() => {});
-      
+      await waitFor(() => { });
+
       // Écran 3 -> 4
       fireEvent.press(nextButton);
-      await waitFor(() => {});
+      await waitFor(() => { });
 
       // Terminer l'onboarding
       const finishButton = getByTestId('onboarding-finish-button');
@@ -396,10 +397,10 @@ describe('Expérience de première utilisation - Onboarding', () => {
 
       // Naviguer jusqu'à la fin
       const nextButton = getByTestId('onboarding-next-button');
-      
+
       for (let i = 0; i < 3; i++) {
         fireEvent.press(nextButton);
-        await waitFor(() => {});
+        await waitFor(() => { });
       }
 
       // Terminer l'onboarding malgré l'erreur
@@ -417,12 +418,12 @@ describe('Expérience de première utilisation - Onboarding', () => {
       (SecureStore.getItemAsync as jest.Mock).mockRejectedValue(
         new Error('SecureStore not available')
       );
-      
+
       // Mais AsyncStorage fonctionne
       (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
 
       const hasCompleted = await OnboardingService.hasCompletedOnboarding();
-      
+
       expect(hasCompleted).toBe(false);
       expect(AsyncStorage.getItem).toHaveBeenCalledWith('onboarding_preferences');
     });
@@ -483,7 +484,7 @@ describe('Expérience de première utilisation - Onboarding', () => {
   describe('Performance', () => {
     it('devrait charger rapidement', async () => {
       const startTime = Date.now();
-      
+
       const mockOnComplete = jest.fn();
       const mockOnSkip = jest.fn();
 
@@ -497,7 +498,7 @@ describe('Expérience de première utilisation - Onboarding', () => {
       );
 
       const loadTime = Date.now() - startTime;
-      
+
       // L'onboarding devrait se charger en moins de 500ms
       expect(loadTime).toBeLessThan(500);
     });
@@ -526,7 +527,7 @@ describe('Expérience de première utilisation - Onboarding', () => {
   describe('Intégration avec l\'application', () => {
     it('devrait rediriger vers l\'écran d\'authentification après completion', async () => {
       const mockNavigate = jest.fn();
-      
+
       // Mock de useNavigation pour capturer la navigation
       jest.doMock('@react-navigation/native', () => ({
         ...jest.requireActual('@react-navigation/native'),
@@ -547,10 +548,10 @@ describe('Expérience de première utilisation - Onboarding', () => {
 
       // Compléter l'onboarding
       const nextButton = getByTestId('onboarding-next-button');
-      
+
       for (let i = 0; i < 3; i++) {
         fireEvent.press(nextButton);
-        await waitFor(() => {});
+        await waitFor(() => { });
       }
 
       const finishButton = getByTestId('onboarding-finish-button');
@@ -596,7 +597,7 @@ describe('Expérience de première utilisation - Onboarding', () => {
       const nextButton = getByTestId('onboarding-next-button');
       fireEvent.press(nextButton);
 
-      await waitFor(() => {});
+      await waitFor(() => { });
 
       // Simuler l'interruption (fermeture de l'app)
       unmount();

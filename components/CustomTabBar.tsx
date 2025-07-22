@@ -36,55 +36,53 @@ const TabItem = React.memo(({ route, index, isFocused, tabWidth, onPress, colors
   const animatedValue = useSharedValue(isFocused ? 1 : 0);
 
   React.useEffect(() => {
+    // Use faster timing for better performance
     animatedValue.value = withSpring(isFocused ? 1 : 0, {
-      damping: 15,
-      stiffness: 150,
+      damping: 20,
+      stiffness: 200,
+      mass: 0.8,
     });
   }, [isFocused, animatedValue]);
 
-  const tabAnimatedStyle = useAnimatedStyle(() => {
+  // Combine animations to reduce workload
+  const combinedAnimatedStyle = useAnimatedStyle(() => {
     const scale = interpolate(
       animatedValue.value,
       [0, 1],
-      [1, 1.1],
+      [1, 1.05], // Reduced scale for better performance
       Extrapolate.CLAMP
     );
 
     const translateY = interpolate(
       animatedValue.value,
       [0, 1],
-      [0, -4],
+      [0, -2], // Reduced movement
+      Extrapolate.CLAMP
+    );
+
+    const opacity = interpolate(
+      animatedValue.value,
+      [0, 1],
+      [0.7, 1],
       Extrapolate.CLAMP
     );
 
     return {
       transform: [{ scale }, { translateY }],
+      opacity,
     };
   });
 
-  const iconAnimatedStyle = useAnimatedStyle(() => {
-    const scale = interpolate(
-      animatedValue.value,
-      [0, 1],
-      [1, 1.2],
-      Extrapolate.CLAMP
-    );
-
-    return {
-      transform: [{ scale }],
-    };
-  });
-
-  const labelAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: animatedValue.value,
+  // Simplified icon animation
+  const iconAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{
-      translateY: interpolate(
+      scale: interpolate(
         animatedValue.value,
         [0, 1],
-        [10, 0],
+        [1, 1.1], // Reduced scale
         Extrapolate.CLAMP
       )
-    }]
+    }],
   }));
 
   return (
@@ -102,7 +100,7 @@ const TabItem = React.memo(({ route, index, isFocused, tabWidth, onPress, colors
       ]}
       activeOpacity={0.7}
     >
-      <Animated.View style={[styles.tabContent, tabAnimatedStyle]}>
+      <Animated.View style={[styles.tabContent, combinedAnimatedStyle]}>
         <Animated.View style={[styles.iconContainer, iconAnimatedStyle]}>
           <TabIcon 
             size={24} 
@@ -110,7 +108,7 @@ const TabItem = React.memo(({ route, index, isFocused, tabWidth, onPress, colors
           />
         </Animated.View>
         
-        <Animated.View style={[styles.labelContainer, labelAnimatedStyle]}>
+        <View style={styles.labelContainer}>
           <Text style={[
             styles.label,
             { 
@@ -120,7 +118,7 @@ const TabItem = React.memo(({ route, index, isFocused, tabWidth, onPress, colors
           ]}>
             {TABS[index].label}
           </Text>
-        </Animated.View>
+        </View>
 
         {isFocused && (
           <Animated.View 

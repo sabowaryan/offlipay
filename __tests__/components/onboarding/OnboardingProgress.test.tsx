@@ -1,4 +1,3 @@
-import React from 'react';
 import { create } from 'react-test-renderer';
 import { Animated } from 'react-native';
 import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
@@ -27,9 +26,13 @@ describe('OnboardingProgress', () => {
     it('devrait rendre correctement avec les props minimales', () => {
       expect(() => {
         const component = create(
-          <OnboardingProgress 
-            currentStep={1} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={1}
+            totalScreens={4}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
+            animated={true}
             testID="onboarding-progress"
           />
         );
@@ -40,9 +43,13 @@ describe('OnboardingProgress', () => {
     it('devrait rendre sans erreur avec des props valides', () => {
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={2} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={2}
+            totalScreens={4}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
+            animated={true}
           />
         );
       }).not.toThrow();
@@ -51,9 +58,12 @@ describe('OnboardingProgress', () => {
     it('devrait rendre avec animated=false', () => {
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={2} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={2}
+            totalScreens={4}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
             animated={false}
           />
         );
@@ -65,9 +75,12 @@ describe('OnboardingProgress', () => {
     it('devrait accepter le prop animated=true', () => {
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={2} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={2}
+            totalScreens={4}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
             animated={true}
           />
         );
@@ -77,9 +90,12 @@ describe('OnboardingProgress', () => {
     it('devrait accepter le prop animated=false', () => {
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={2} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={2}
+            totalScreens={4}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
             animated={false}
           />
         );
@@ -89,9 +105,13 @@ describe('OnboardingProgress', () => {
     it('devrait utiliser animated=true par défaut', () => {
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={2} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={2}
+            totalScreens={4}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
+            animated={true}
           />
         );
       }).not.toThrow();
@@ -99,58 +119,78 @@ describe('OnboardingProgress', () => {
   });
 
   describe('Gestion des props', () => {
-    it('devrait gérer correctement currentStep=0', () => {
+    it('devrait gérer correctement currentScreen=0', () => {
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={0} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={0}
+            totalScreens={4}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
+            animated={true}
           />
         );
       }).not.toThrow();
     });
 
-    it('devrait gérer correctement currentStep=totalSteps', () => {
-      const totalSteps = 4;
-      
+    it('devrait gérer correctement currentScreen=totalScreens', () => {
+      const totalScreens = 4;
+
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={totalSteps} 
-            totalSteps={totalSteps} 
+          <OnboardingProgress
+            currentScreen={totalScreens}
+            totalScreens={totalScreens}
+            currentSlide={3}
+            totalSlides={3}
+            style="dots"
+            animated={true}
           />
         );
       }).not.toThrow();
     });
 
-    it('devrait gérer un seul step', () => {
+    it('devrait gérer un seul screen', () => {
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={1} 
-            totalSteps={1} 
+          <OnboardingProgress
+            currentScreen={1}
+            totalScreens={1}
+            currentSlide={1}
+            totalSlides={1}
+            style="dots"
+            animated={true}
           />
         );
       }).not.toThrow();
     });
 
-    it('devrait gérer des valeurs de step négatives', () => {
+    it('devrait gérer des valeurs de screen négatives', () => {
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={-1} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={-1}
+            totalScreens={4}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
+            animated={true}
           />
         );
       }).not.toThrow();
     });
 
-    it('devrait gérer currentStep supérieur à totalSteps', () => {
+    it('devrait gérer currentScreen supérieur à totalScreens', () => {
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={10} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={10}
+            totalScreens={4}
+            currentSlide={3}
+            totalSlides={3}
+            style="dots"
+            animated={true}
           />
         );
       }).not.toThrow();
@@ -159,26 +199,34 @@ describe('OnboardingProgress', () => {
 
   describe('Performance', () => {
     it('devrait gérer un grand nombre d\'étapes', () => {
-      const totalSteps = 20;
-      
+      const totalScreens = 20;
+
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={10} 
-            totalSteps={totalSteps} 
+          <OnboardingProgress
+            currentScreen={10}
+            totalScreens={totalScreens}
+            currentSlide={5}
+            totalSlides={10}
+            style="dots"
+            animated={true}
           />
         );
       }).not.toThrow();
     });
 
     it('devrait rendre efficacement avec de nombreuses étapes', () => {
-      const totalSteps = 10;
-      
+      const totalScreens = 10;
+
       expect(() => {
         create(
-          <OnboardingProgress 
-            currentStep={5} 
-            totalSteps={totalSteps} 
+          <OnboardingProgress
+            currentScreen={5}
+            totalScreens={totalScreens}
+            currentSlide={3}
+            totalSlides={5}
+            style="dots"
+            animated={true}
           />
         );
       }).not.toThrow();
@@ -186,11 +234,14 @@ describe('OnboardingProgress', () => {
   });
 
   describe('Mise à jour des props', () => {
-    it('devrait gérer les changements de currentStep', () => {
+    it('devrait gérer les changements de currentScreen', () => {
       const component = create(
-        <OnboardingProgress 
-          currentStep={1} 
-          totalSteps={4} 
+        <OnboardingProgress
+          currentScreen={1}
+          totalScreens={4}
+          currentSlide={1}
+          totalSlides={3}
+          style="dots"
           animated={true}
         />
       );
@@ -198,28 +249,39 @@ describe('OnboardingProgress', () => {
       // Changer l'étape courante
       expect(() => {
         component.update(
-          <OnboardingProgress 
-            currentStep={2} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={2}
+            totalScreens={4}
+            currentSlide={2}
+            totalSlides={3}
+            style="dots"
             animated={true}
           />
         );
       }).not.toThrow();
     });
 
-    it('devrait gérer les changements de totalSteps', () => {
+    it('devrait gérer les changements de totalScreens', () => {
       const component = create(
-        <OnboardingProgress 
-          currentStep={2} 
-          totalSteps={4} 
+        <OnboardingProgress
+          currentScreen={2}
+          totalScreens={4}
+          currentSlide={1}
+          totalSlides={3}
+          style="dots"
+          animated={true}
         />
       );
 
       expect(() => {
         component.update(
-          <OnboardingProgress 
-            currentStep={2} 
-            totalSteps={6} 
+          <OnboardingProgress
+            currentScreen={2}
+            totalScreens={6}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
+            animated={true}
           />
         );
       }).not.toThrow();
@@ -227,18 +289,24 @@ describe('OnboardingProgress', () => {
 
     it('devrait gérer le basculement du mode animated', () => {
       const component = create(
-        <OnboardingProgress 
-          currentStep={2} 
-          totalSteps={4} 
+        <OnboardingProgress
+          currentScreen={2}
+          totalScreens={4}
+          currentSlide={1}
+          totalSlides={3}
+          style="dots"
           animated={true}
         />
       );
 
       expect(() => {
         component.update(
-          <OnboardingProgress 
-            currentStep={2} 
-            totalSteps={4} 
+          <OnboardingProgress
+            currentScreen={2}
+            totalScreens={4}
+            currentSlide={1}
+            totalSlides={3}
+            style="dots"
             animated={false}
           />
         );

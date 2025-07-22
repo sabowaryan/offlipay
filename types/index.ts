@@ -121,3 +121,151 @@ export interface CashInQRData {
   publicKey: string;
   nonce: string;
 }
+
+// Types pour l'onboarding premium multi-slides
+export type AnimationType = 'fadeIn' | 'slideUp' | 'scale' | 'morphing' | 'parallax';
+export type TransitionType = 'slide' | 'fade' | 'scale' | 'flip' | 'cube';
+export type EasingType = 'ease' | 'easeIn' | 'easeOut' | 'easeInOut' | 'spring';
+export type ProgressStyle = 'dots' | 'bars' | 'circular' | 'minimal';
+export type SwipeDirection = 'left' | 'right' | 'up' | 'down';
+export type GestureType = 'horizontal' | 'vertical';
+export type DeviceCapability = 'low' | 'medium' | 'high';
+export type AnimationLevel = 'minimal' | 'standard' | 'premium';
+
+export interface SlideConfig {
+  id: string;
+  illustration: string; // Component name for dynamic import
+  title: string;
+  subtitle: string;
+  animationType: AnimationType;
+  duration: number;
+  interactionHint?: string;
+}
+
+export interface PremiumScreenConfig {
+  id: string;
+  title: string;
+  slides: SlideConfig[];
+  transitionType: TransitionType;
+  backgroundColor?: string;
+  backgroundGradient?: GradientConfig;
+}
+
+export interface GradientConfig {
+  colors: string[];
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+}
+
+export interface TransitionConfig {
+  screenTransitionDuration: number;
+  slideTransitionDuration: number;
+  easing: EasingType;
+  parallaxIntensity: number;
+}
+
+export interface GestureConfig {
+  horizontalThreshold: number;
+  verticalThreshold: number;
+  velocityThreshold: number;
+  simultaneousGestures: boolean;
+}
+
+export interface PerformanceConfig {
+  deviceCapability: DeviceCapability;
+  animationLevel: AnimationLevel;
+  enableLazyLoading: boolean;
+  maxConcurrentAnimations: number;
+  memoryThreshold: number;
+}
+
+export interface AccessibilityConfig {
+  reduceMotion: boolean;
+  enableAudioDescriptions: boolean;
+  alternativeNavigation: boolean;
+  highContrast: boolean;
+}
+
+export interface PremiumOnboardingConfig {
+  screens: PremiumScreenConfig[];
+  transitions: TransitionConfig;
+  gestures: GestureConfig;
+  performance: PerformanceConfig;
+  accessibility: AccessibilityConfig;
+}
+
+export interface OnboardingSlideCarouselProps {
+  slides: SlideConfig[];
+  currentSlide: number;
+  onSlideChange: (index: number) => void;
+  autoProgress?: boolean;
+  autoProgressDelay?: number;
+  theme: 'light' | 'dark';
+}
+
+export interface OnboardingGestureHandlerProps {
+  onHorizontalSwipe: (direction: SwipeDirection) => void;
+  onVerticalSwipe: (direction: SwipeDirection) => void;
+  onTap: () => void;
+  enabled: boolean;
+  children: React.ReactNode;
+}
+
+export interface OnboardingProgressProps {
+  currentScreen: number;
+  totalScreens: number;
+  currentSlide: number;
+  totalSlides: number;
+  style: ProgressStyle;
+  animated: boolean;
+}
+
+export interface GestureThresholds {
+  horizontal: number;
+  vertical: number;
+  velocity: number;
+}
+
+export interface Dimensions {
+  width: number;
+  height: number;
+}
+
+export interface ResponsiveConfig {
+  breakpoints: {
+    mobile: Dimensions;
+    tablet: Dimensions;
+    desktop: Dimensions;
+  };
+  adaptations: {
+    illustrationSize: (screenSize: Dimensions) => number;
+    animationComplexity: (deviceCapability: DeviceCapability) => AnimationLevel;
+    gestureThresholds: (screenSize: Dimensions) => GestureThresholds;
+  };
+}
+
+export interface IllustrationProps {
+  theme: 'light' | 'dark';
+  animated: boolean;
+  size: number;
+  onAnimationComplete?: () => void;
+}
+
+export interface OnboardingState {
+  currentScreen: number;
+  currentSlide: number;
+  isCompleted: boolean;
+  hasSeenBefore: boolean;
+  lastPosition: {
+    screen: number;
+    slide: number;
+  };
+}
+
+export enum PremiumOnboardingErrorCode {
+  SLIDE_LOAD_FAILED = 'SLIDE_001',
+  GESTURE_CONFLICT = 'GESTURE_001',
+  ANIMATION_PERFORMANCE = 'ANIM_002',
+  ILLUSTRATION_RENDER = 'ILLUS_001',
+  MEMORY_LIMIT = 'MEM_001',
+}
