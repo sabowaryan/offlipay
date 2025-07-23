@@ -56,6 +56,7 @@ export default function PayScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [user, setUser] = useState<User | null>(WalletService.getCurrentUser());
+  const [balance, setBalance] = useState<number>(0);
   const { userMode, toggleUserMode } = useUserMode();
   const [mode, setMode] = useState<'generate' | 'scan' | null>(null);
   const [amount, setAmount] = useState('');
@@ -78,6 +79,12 @@ export default function PayScreen() {
     // Réinitialiser le mode si le userMode change
     setMode(null);
   }, [userMode]);
+
+  useEffect(() => {
+    if (user) {
+      WalletService.getWalletBalance(user.walletId).then(bal => setBalance(bal.available));
+    }
+  }, [user]);
 
   // Ouvre le scanner global quand mode === 'scan'
   useEffect(() => {
@@ -183,7 +190,8 @@ export default function PayScreen() {
     }
   };
 
-  const formatBalance = (balance: number) => {
+  const formatBalance = (balance?: number) => {
+    if (typeof balance !== 'number' || isNaN(balance)) return '0,00 €';
     if (balanceVisible) {
       return balance.toLocaleString('fr-FR', {
         style: 'currency',
@@ -238,7 +246,7 @@ export default function PayScreen() {
               </Text>
               <View style={styles.balanceContainer}>
                 <Text style={[styles.balanceText, { color: COLORS.WHITE + 'CC' }]}>
-                  Solde: {formatBalance(user.balance)}
+                  Solde: {formatBalance(balance)}
                 </Text>
                 <TouchableOpacity 
                   onPress={() => setBalanceVisible(!balanceVisible)}

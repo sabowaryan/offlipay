@@ -234,6 +234,7 @@ export default function AuthScreen() {
       }
     } catch (error) {
       console.error('Erreur lors de la validation du téléphone:', error);
+      // Don't set error state here to avoid potential issues
     }
   };
 
@@ -254,7 +255,7 @@ export default function AuthScreen() {
     if (text.trim().length >= 8) {
       const timer = setTimeout(() => {
         validatePhoneUniqueness(text);
-      }, 500);
+      }, 500) as unknown as number;
       setPhoneValidationTimer(timer);
     }
   };

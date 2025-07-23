@@ -3,7 +3,6 @@ export interface User {
   name: string;
   phone: string;
   walletId: string;
-  balance: number;
   pin: string;
   publicKey: string;
   privateKey: string;
@@ -33,6 +32,7 @@ export interface QRPaymentData {
   timestamp: number;
   signature: string;
   nonce: string;
+  publicKey: string; // Ajout de la clé publique pour la vérification
 }
 
 export interface WalletBalance {

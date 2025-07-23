@@ -54,6 +54,7 @@ export default function SettingsScreen() {
   const [syncEnabled, setSyncEnabled] = useState(false);
   const [offlineMode, setOfflineMode] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [balance, setBalance] = useState<number>(0);
   const [sessionInfo, setSessionInfo] = useState({
     lastLogin: '',
     deviceInfo: '',
@@ -69,7 +70,9 @@ export default function SettingsScreen() {
     const currentUser = WalletService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
-      
+      // Récupérer la balance depuis la table balances
+      const balanceObj = await WalletService.getWalletBalance(currentUser.walletId);
+      setBalance(balanceObj.available);
       // Simuler les informations de session
       setSessionInfo({
         lastLogin: new Date().toLocaleDateString('fr-FR', {
@@ -80,7 +83,7 @@ export default function SettingsScreen() {
           minute: '2-digit'
         }),
         deviceInfo: `${Platform.OS} ${Platform.Version}`,
-        walletBalance: currentUser.balance,
+        walletBalance: balanceObj.available,
       });
     }
     setIsLoading(false);
@@ -351,7 +354,7 @@ export default function SettingsScreen() {
                 Solde wallet
               </Text>
               <Text style={[styles.sessionValue, { color: COLORS.PRIMARY }]}>
-                {sessionInfo.walletBalance.toFixed(2)} €
+                {balance.toFixed(2)} €
               </Text>
             </View>
           </View>

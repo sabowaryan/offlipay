@@ -68,6 +68,7 @@ export default function HomeScreen() {
   const [copiedWalletId, setCopiedWalletId] = useState(false);
   const [showVoucherScanner, setShowVoucherScanner] = useState(false);
   const [scannedVoucherCode, setScannedVoucherCode] = useState<string | undefined>(undefined);
+  const [balance, setBalance] = useState<number>(0);
 
   useEffect(() => {
     loadUserData();
@@ -80,8 +81,11 @@ export default function HomeScreen() {
       const currentUser = WalletService.getCurrentUser();
       if (currentUser) {
         setUser(currentUser);
-        const history = await WalletService.getTransactionHistory(5);
+        const history = await WalletService.getTransactionHistory(20);
         setTransactions(history);
+        // Récupérer la balance depuis la table balances
+        const balanceObj = await WalletService.getWalletBalance(currentUser.walletId);
+        setBalance(balanceObj.available);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -261,7 +265,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
             <Text style={[styles.balanceAmount, { color: COLORS.WHITE }]}>
-              {formatBalance(user.balance)}
+              {formatBalance(balance)}
             </Text>
             <View style={styles.walletInfo}>
               <View style={styles.walletIdContainer}>
@@ -442,7 +446,6 @@ export default function HomeScreen() {
         onClose={() => setShowCashInModal(false)}
         onSuccess={handleCashInSuccess}
         voucherCodeScanned={scannedVoucherCode}
-        onRequestVoucherScan={handleRequestVoucherScan}
       />
 
       {/* Scanner QR global pour voucher */}

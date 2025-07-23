@@ -59,7 +59,6 @@ export class WalletService {
       name: name.trim(),
       phone: phone.trim(),
       walletId,
-      balance: 0,
       pin: hashedPin,
       publicKey,
       privateKey,
@@ -128,6 +127,11 @@ export class WalletService {
       throw new Error('Wallet not found');
     }
 
+    const balance = await StorageService.getBalance(user.id);
+    if (!balance) {
+      throw new Error('Balance introuvable');
+    }
+
     const transactions = await StorageService.getTransactions(walletId);
     const pendingTransactions = transactions.filter(t => t.status === 'pending');
 
@@ -136,9 +140,9 @@ export class WalletService {
     }, 0);
 
     return {
-      available: user.balance,
-      pending: pendingAmount,
-      total: user.balance + pendingAmount
+      available: balance.current_balance,
+      pending: balance.pending_balance + pendingAmount,
+      total: balance.current_balance + balance.pending_balance + pendingAmount
     };
   }
 
@@ -162,7 +166,8 @@ export class WalletService {
       description,
       timestamp,
       signature: '',
-      nonce
+      nonce,
+      publicKey: this.currentUser.publicKey // Ajout de la clé publique
     };
 
     // Create signature
@@ -186,7 +191,7 @@ export class WalletService {
     const isValidSignature = await CryptoUtils.verifySignature(
       dataToSign,
       paymentData.signature,
-      paymentData.fromWalletId // In a real implementation, you'd get the public key from the sender
+      paymentData.publicKey // Utilisation de la vraie clé publique
     );
 
     if (!isValidSignature) {
@@ -195,7 +200,8 @@ export class WalletService {
 
     // Check if we have sufficient balance (for sender)
     const isSender = paymentData.fromWalletId === this.currentUser.walletId;
-    if (isSender && this.currentUser.balance < paymentData.amount) {
+    const balance = await StorageService.getBalance(this.currentUser.id);
+    if (isSender && (!balance || balance.current_balance < paymentData.amount)) {
       throw new Error('Insufficient balance');
     }
 
@@ -215,12 +221,11 @@ export class WalletService {
     };
 
     // Update balance
-    const newBalance = isSender
-      ? this.currentUser.balance - paymentData.amount
-      : this.currentUser.balance + paymentData.amount;
-
-    await StorageService.updateUserBalance(this.currentUser.walletId, newBalance);
-    this.currentUser.balance = newBalance;
+    let newBalance = balance ? balance.current_balance : 0;
+    newBalance = isSender
+      ? newBalance - paymentData.amount
+      : newBalance + paymentData.amount;
+    await StorageService.updateBalance(this.currentUser.id, newBalance, balance ? balance.pending_balance : 0);
 
     // Save transaction
     await StorageService.saveTransaction(transaction);
@@ -243,9 +248,9 @@ export class WalletService {
       throw new Error('No user logged in');
     }
 
-    const newBalance = this.currentUser.balance + amount;
-    await StorageService.updateUserBalance(this.currentUser.walletId, newBalance);
-    this.currentUser.balance = newBalance;
+    const balance = await StorageService.getBalance(this.currentUser.id);
+    const newBalance = (balance?.current_balance ?? 0) + amount;
+    await StorageService.updateBalance(this.currentUser.id, newBalance, balance?.pending_balance ?? 0);
 
     // Create a transaction record
     const transaction: Transaction = {

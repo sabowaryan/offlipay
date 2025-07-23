@@ -17,7 +17,6 @@ export class StorageService {
         name TEXT NOT NULL,
         phone TEXT UNIQUE NOT NULL,
         walletId TEXT UNIQUE NOT NULL,
-        balance REAL DEFAULT 0,
         pin TEXT NOT NULL,
         publicKey TEXT NOT NULL,
         privateKey TEXT NOT NULL,
@@ -118,12 +117,26 @@ export class StorageService {
 
   // Check if phone number exists
   static async checkPhoneExists(phone: string): Promise<boolean> {
+    if (!phone || typeof phone !== 'string') {
+      console.error('Invalid phone parameter:', phone);
+      return false;
+    }
+    
     await this.initializeDatabase();
     
     try {
-      const result = await this.db!.getFirstAsync<any>(
+      // Ensure database is initialized
+      if (!this.db) {
+        console.error('Database not initialized');
+        return false;
+      }
+      
+      // Normalize phone number by removing spaces and special characters
+      const normalizedPhone = phone.trim().replace(/\s+/g, '');
+      
+      const result = await this.db.getFirstAsync<any>(
         'SELECT walletId FROM users WHERE phone = ?',
-        [phone.trim()]
+        [normalizedPhone]
       );
       
       return !!result;
@@ -169,14 +182,13 @@ export class StorageService {
 
       await this.db!.runAsync(
         `INSERT INTO users 
-         (id, name, phone, walletId, balance, pin, publicKey, privateKey, createdAt, lastSyncAt) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, name, phone, walletId, pin, publicKey, privateKey, createdAt, lastSyncAt) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           user.id,
           user.name,
           user.phone,
           user.walletId,
-          user.balance,
           user.pin,
           user.publicKey,
           user.privateKey,
@@ -188,7 +200,7 @@ export class StorageService {
       // Créer l'entrée de balance pour l'utilisateur
       await this.saveBalance({
         user_id: user.id,
-        current_balance: user.balance,
+        current_balance: 0,
         pending_balance: 0,
         last_update: new Date()
       });
@@ -219,7 +231,6 @@ export class StorageService {
       name: result.name,
       phone: result.phone,
       walletId: result.walletId,
-      balance: result.balance,
       pin: result.pin,
       publicKey: result.publicKey,
       privateKey: result.privateKey,
@@ -233,12 +244,11 @@ export class StorageService {
     
     await this.db!.runAsync(
       `UPDATE users 
-       SET name = ?, phone = ?, balance = ?, pin = ?, publicKey = ?, privateKey = ?, lastSyncAt = ?
+       SET name = ?, phone = ?, pin = ?, publicKey = ?, privateKey = ?, lastSyncAt = ?
        WHERE walletId = ?`,
       [
         user.name,
         user.phone,
-        user.balance,
         user.pin,
         user.publicKey,
         user.privateKey,
@@ -246,9 +256,15 @@ export class StorageService {
         user.walletId
       ]
     );
+  }
 
-    // Mettre à jour la balance
-    await this.updateBalance(user.id, user.balance, 0);
+  static async updateUserPin(walletId: string, newPin: string): Promise<void> {
+    await this.initializeDatabase();
+    
+    await this.db!.runAsync(
+      'UPDATE users SET pin = ? WHERE walletId = ?',
+      [newPin, walletId]
+    );
   }
 
   static async updateUserBalance(walletId: string, newBalance: number): Promise<void> {
@@ -752,7 +768,6 @@ export class StorageService {
       name: result.name,
       phone: result.phone,
       walletId: result.walletId,
-      balance: result.balance,
       pin: result.pin,
       publicKey: result.publicKey,
       privateKey: result.privateKey,

@@ -46,6 +46,7 @@ interface CashInModalProps {
   visible: boolean;
   onClose: () => void;
   onSuccess: (amount: number) => void;
+  voucherCodeScanned?: string;
 }
 
 export default function CashInModal({ visible, onClose, onSuccess }: CashInModalProps) {
@@ -64,6 +65,7 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
   const [loading, setLoading] = useState(false);
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [user, setUser] = useState<User | null>(WalletService.getCurrentUser());
+  const [balance, setBalance] = useState<number>(0);
 
   // États des données
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -90,6 +92,12 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
       loadData();
     }
   }, [visible]);
+
+  useEffect(() => {
+    if (user) {
+      WalletService.getWalletBalance(user.walletId).then(bal => setBalance(bal.available));
+    }
+  }, [user]);
 
   // Chargement des agents et comptes bancaires
   const loadData = async () => {
@@ -238,8 +246,24 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
   };
   const processCashIn = async (transaction: CashInTransaction) => {
     if (user) {
-      user.balance += transaction.amount;
-      await StorageService.updateUser(user);
+      // Mettre à jour la balance via la table balances
+      const balanceObj = await StorageService.getBalance(user.id);
+      const newBalance = (balanceObj?.current_balance ?? 0) + transaction.amount;
+      await StorageService.updateBalance(user.id, newBalance, balanceObj?.pending_balance ?? 0);
+      // Créer une transaction classique pour l'historique
+      const histoTransaction = {
+        id: transaction.id + '_tx',
+        fromWalletId: 'SYSTEM',
+        toWalletId: user.walletId,
+        amount: transaction.amount,
+        description: 'Cash-in',
+        signature: 'SYSTEM',
+        timestamp: new Date(),
+        status: 'completed' as const,
+        type: 'received' as const,
+        syncStatus: 'local' as const
+      };
+      await StorageService.saveTransaction(histoTransaction);
     }
     await StorageService.updateCashInTransactionStatus(transaction.id, 'completed');
     Alert.alert(
@@ -444,7 +468,7 @@ export default function CashInModal({ visible, onClose, onSuccess }: CashInModal
             <View style={{ flex: 1, alignItems: isMobile ? 'center' : 'flex-start', justifyContent: 'center' }}>
               <Text style={[TYPO.caption, { color: COLORS.GRAY_MEDIUM, marginBottom: 2, textAlign: isMobile ? 'center' : 'left' }]}>Solde actuel</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', gap: 10 }}>
-                <Text style={[TYPO.h1, { color: COLORS.PRIMARY, fontWeight: '700', fontSize: isMobile ? 28 : 32, textAlign: isMobile ? 'center' : 'left', letterSpacing: 0.2 }]}>{formatBalance(user.balance)}</Text>
+                <Text style={[TYPO.h1, { color: COLORS.PRIMARY, fontWeight: '700', fontSize: isMobile ? 28 : 32, textAlign: isMobile ? 'center' : 'left', letterSpacing: 0.2 }]}>{formatBalance(balance)}</Text>
                 <TouchableOpacity
                   onPress={() => setBalanceVisible(!balanceVisible)}
                   style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.PRIMARY + '15', alignItems: 'center', justifyContent: 'center', marginLeft: 2 }}
