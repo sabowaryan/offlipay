@@ -1,33 +1,29 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { IllustrationProps } from '@/types';
+import { View, Text, StyleSheet } from 'react-native';
 
-export const WalletOverview: React.FC<IllustrationProps> = ({
-  theme,
-  animated,
-  size,
-  onAnimationComplete
-}) => {
+const WalletOverview = () => {
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
-      {/* Placeholder for 3D isometric wallet interface */}
-      <View style={[
-        styles.placeholder,
-        { backgroundColor: theme === 'dark' ? '#333' : '#f0f0f0' }
-      ]} />
+    <View style={styles.container}>
+      <Text style={styles.title}>Vue d'ensemble du Portefeuille</Text>
+      {/* Ici, nous ajouterons l'interface de portefeuille en 3D isométrique et les éléments flottants */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f0f0f0',
   },
-  placeholder: {
-    width: '80%',
-    height: '80%',
-    borderRadius: 20,
-    opacity: 0.3,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
+
+export default WalletOverview;
+
+

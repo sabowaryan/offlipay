@@ -1,33 +1,28 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { IllustrationProps } from '@/types';
+import { View, Text, StyleSheet } from 'react-native';
 
-export const CashInMethods: React.FC<IllustrationProps> = ({
-  theme,
-  animated,
-  size,
-  onAnimationComplete
-}) => {
+const CashInMethods = () => {
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
-      {/* Placeholder for neomorphism cash-in methods animation */}
-      <View style={[
-        styles.placeholder,
-        { backgroundColor: theme === 'dark' ? '#333' : '#f0f0f0' }
-      ]} />
+    <View style={styles.container}>
+      <Text style={styles.title}>Méthodes de Rechargement</Text>
+      {/* Ici, nous ajouterons les icônes néomorphisme et les animations de flux d'argent */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f0f0f0',
   },
-  placeholder: {
-    width: '80%',
-    height: '80%',
-    borderRadius: 20,
-    opacity: 0.3,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
+
+export default CashInMethods;
+
