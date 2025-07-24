@@ -27,6 +27,7 @@ export interface OnboardingState {
     completedAt?: Date;
     skippedAt?: Date;
     version: string;
+    currentSlide?: number; // Added for premium onboarding
 }
 
 export interface OnboardingPreferences {
@@ -173,12 +174,13 @@ export class OnboardingService {
     /**
      * Sauvegarde la progression actuelle de l'onboarding
      */
-    static async saveProgress(currentScreen: number): Promise<void> {
+    static async saveProgress(currentScreen: number, currentSlide: number = 0): Promise<void> {
         try {
             const currentState = await this.getOnboardingState();
             const newState: OnboardingState = {
                 ...currentState,
                 currentScreen,
+                currentSlide,
                 version: this.ONBOARDING_VERSION,
             };
 
@@ -312,6 +314,19 @@ export class OnboardingService {
                 'Impossible de réinitialiser l\'onboarding',
                 error instanceof Error ? error : undefined
             );
+        }
+    }
+
+    /**
+     * Méthode temporaire pour réinitialiser l'état de l'onboarding pour les tests.
+     * À supprimer après le développement.
+     */
+    static async resetOnboardingStateForTesting(): Promise<void> {
+        try {
+            await AsyncStorage.removeItem(this.ONBOARDING_STATE_KEY);
+            console.log('Onboarding state reset for testing.');
+        } catch (error) {
+            console.error('Failed to reset onboarding state for testing:', error);
         }
     }
 

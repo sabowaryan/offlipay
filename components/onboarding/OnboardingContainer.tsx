@@ -45,6 +45,11 @@ import QRPaymentIllustration from './illustrations/QRPaymentIllustration';
 import WalletIllustration from './illustrations/WalletIllustration';
 import OfflineIllustration from './illustrations/OfflineIllustration';
 
+// Import new components
+import OnboardingSlideCarousel from './OnboardingSlideCarousel';
+import OnboardingGestureHandler from './OnboardingGestureHandler';
+import OnboardingTransitions from './OnboardingTransitions';
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 const SWIPE_VELOCITY_THRESHOLD = 500;
@@ -63,6 +68,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
 }) => {
   const { colors, theme } = useThemeColors();
   const [currentScreen, setCurrentScreen] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0); // New state for current slide
   const [screens, setScreens] = useState<OnboardingScreenConfig[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
   const [skipEnabled, setSkipEnabled] = useState(true);
@@ -75,6 +81,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   const translateX = useSharedValue(0);
   const screenOpacity = useSharedValue(1);
   const progressOpacity = useSharedValue(0);
+  const slideProgress = useSharedValue(0); // New shared value for slide progress
 
   // Refs
   const panRef = useRef(null);
@@ -118,6 +125,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
             const state = stateResult.value;
             if (state.currentScreen > 0 && state.currentScreen < screensResult.value.length) {
               setCurrentScreen(state.currentScreen);
+              setCurrentSlide(state.currentSlide || 0); // Restore current slide
             }
           }
 
@@ -138,9 +146,9 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   }, []);
 
   // Save progress automatically
-  const saveProgress = useCallback(async (screenIndex: number) => {
+  const saveProgress = useCallback(async (screenIndex: number, slideIndex: number) => {
     try {
-      await OnboardingService.saveProgress(screenIndex);
+      await OnboardingService.saveProgress(screenIndex, slideIndex);
     } catch (error) {
       console.warn('Impossible de sauvegarder la progression:', error);
     }
@@ -172,7 +180,8 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
           duration: exitDuration,
         }, () => {
           runOnJS(setCurrentScreen)(targetScreen);
-          runOnJS(saveProgress)(targetScreen);
+          runOnJS(setCurrentSlide)(0); // Reset slide when changing screen
+          runOnJS(saveProgress)(targetScreen, 0);
 
           screenOpacity.value = withTiming(1, {
             duration: enterDuration,
@@ -183,7 +192,8 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
       } else {
         // Simplified navigation for low-end devices
         setCurrentScreen(targetScreen);
-        await saveProgress(targetScreen);
+        setCurrentSlide(0); // Reset slide when changing screen
+        await saveProgress(targetScreen, 0);
         setIsAnimating(false);
       }
 
@@ -195,21 +205,53 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
     [isAnimating, screens.length, screenOpacity, saveProgress, deviceCapabilities, animationConfig]
   );
 
+  // Handle slide navigation
+  const navigateToSlide = useCallback(
+    (targetSlide: number) => {
+      const currentScreenConfig = screens[currentScreen];
+      if (!currentScreenConfig || targetSlide < 0 || targetSlide >= currentScreenConfig.slides.length) {
+        return;
+      }
+      setCurrentSlide(targetSlide);
+      saveProgress(currentScreen, targetSlide);
+    },
+    [currentScreen, screens, saveProgress]
+  );
+
   // Handle next screen
-  const handleNext = useCallback(() => {
+  const handleNextScreen = useCallback(() => {
     if (currentScreen < screens.length - 1) {
       navigateToScreen(currentScreen + 1);
     } else {
       handleComplete();
     }
-  }, [currentScreen, screens.length, navigateToScreen]);
+  }, [currentScreen, screens.length, navigateToScreen, handleComplete]);
 
   // Handle previous screen
-  const handlePrevious = useCallback(() => {
+  const handlePreviousScreen = useCallback(() => {
     if (currentScreen > 0) {
       navigateToScreen(currentScreen - 1);
     }
   }, [currentScreen, navigateToScreen]);
+
+  // Handle next slide
+  const handleNextSlide = useCallback(() => {
+    const currentScreenConfig = screens[currentScreen];
+    if (currentScreenConfig && currentSlide < currentScreenConfig.slides.length - 1) {
+      navigateToSlide(currentSlide + 1);
+    } else {
+      handleNextScreen(); // Move to next screen if no more slides
+    }
+  }, [currentScreen, currentSlide, screens, navigateToSlide, handleNextScreen]);
+
+  // Handle previous slide
+  const handlePreviousSlide = useCallback(() => {
+    if (currentSlide > 0) {
+      navigateToSlide(currentSlide - 1);
+    } else {
+      handlePreviousScreen(); // Move to previous screen if no more slides
+    }
+  }, [currentSlide, navigateToSlide, handlePreviousScreen]);
 
   // Handle completion
   const handleComplete = useCallback(async () => {
@@ -269,9 +311,9 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
       const isSwipeRight = translationX > SWIPE_THRESHOLD || velocityX > SWIPE_VELOCITY_THRESHOLD;
 
       if (isSwipeLeft) {
-        runOnJS(handleNext)();
+        runOnJS(handleNextScreen)();
       } else if (isSwipeRight) {
-        runOnJS(handlePrevious)();
+        runOnJS(handlePreviousScreen)();
       }
 
       // Reset gesture values
@@ -281,9 +323,9 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   // Handle screen interaction
   const handleScreenInteraction = useCallback(() => {
     if (!isAnimating) {
-      handleNext();
+      handleNextSlide();
     }
-  }, [isAnimating, handleNext]);
+  }, [isAnimating, handleNextSlide]);
 
   // Auto-progress functionality (optional)
   const startAutoProgress = useCallback(() => {
@@ -294,19 +336,24 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
     const currentScreenConfig = screens[currentScreen];
     if (currentScreenConfig && currentScreenConfig.duration > 0) {
       autoProgressTimer.current = setTimeout(() => {
-        if (currentScreen < screens.length - 1) {
-          handleNext();
+        if (currentSlide < currentScreenConfig.slides.length - 1) {
+          handleNextSlide();
+        } else if (currentScreen < screens.length - 1) {
+          handleNextScreen();
         }
       }, currentScreenConfig.duration);
     }
-  }, [currentScreen, screens, handleNext]);
+  }, [currentScreen, currentSlide, screens, handleNextSlide, handleNextScreen]);
 
   // Handle Android back button
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
-        if (currentScreen > 0) {
-          handlePrevious();
+        if (currentSlide > 0) {
+          handlePreviousSlide();
+          return true;
+        } else if (currentScreen > 0) {
+          handlePreviousScreen();
           return true;
         }
         return false;
@@ -314,7 +361,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
 
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
       return () => subscription.remove();
-    }, [currentScreen, handlePrevious])
+    }, [currentScreen, currentSlide, handlePreviousSlide, handlePreviousScreen])
   );
 
   // Cleanup timers
@@ -372,8 +419,8 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
           <OnboardingProgress
             currentScreen={currentScreen + 1}
             totalScreens={screens.length}
-            currentSlide={1}
-            totalSlides={1}
+            currentSlide={currentSlide + 1} // Pass current slide
+            totalSlides={currentScreenConfig.slides.length} // Pass total slides for current screen
             style="dots"
             animated={true}
           />
@@ -392,29 +439,36 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
         )}
 
         {/* Main Content */}
-        <GestureDetector gesture={panGesture}>
+        <OnboardingGestureHandler
+          onHorizontalSwipe={direction => {
+            if (direction === 'left') handleNextScreen();
+            else handlePreviousScreen();
+          }}
+          onVerticalSwipe={direction => {
+            if (direction === 'up') handleNextSlide();
+            else handlePreviousSlide();
+          }}
+          onTap={handleNextSlide} // Tap to advance slide/screen
+          enabled={!isAnimating}
+        >
           <Animated.View style={[styles.screenContainer, containerAnimatedStyle]}>
-            <OnboardingScreen
-              title={currentScreenConfig.title}
-              subtitle={currentScreenConfig.subtitle}
-              illustration={IllustrationComponent}
-              animationDelay={isAnimating ? 0 : 300}
-              onInteraction={handleScreenInteraction}
-              interactionHint={
-                currentScreen === screens.length - 1
-                  ? 'Appuyez pour commencer'
-                  : 'Appuyez pour continuer'
-              }
+            <OnboardingSlideCarousel
+              slides={currentScreenConfig.slides}
+              currentSlide={currentSlide}
+              onSlideChange={navigateToSlide}
+              autoProgress={true} // Enable auto-progress
+              autoProgressDelay={currentScreenConfig.duration || 3000} // Use screen duration or default
+              theme={theme}
             />
           </Animated.View>
-        </GestureDetector>
+        </OnboardingGestureHandler>
 
         {/* Navigation Controls */}
         <View style={styles.navigationContainer}>
           {currentScreen > 0 && (
             <OnboardingButton
               title="Précédent"
-              onPress={handlePrevious}
+              onPress={handlePreviousScreen}
               variant="secondary"
               disabled={isAnimating}
             />
@@ -423,8 +477,8 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
           <View style={styles.navigationSpacer} />
 
           <OnboardingButton
-            title={currentScreen === screens.length - 1 ? 'Commencer' : 'Suivant'}
-            onPress={handleNext}
+            title={currentScreen === screens.length - 1 && currentSlide === currentScreenConfig.slides.length - 1 ? 'Commencer' : 'Suivant'}
+            onPress={handleNextSlide}
             variant="primary"
             disabled={isAnimating}
           />
@@ -470,3 +524,5 @@ const createStyles = (colors: any) => StyleSheet.create({
 });
 
 export default OnboardingContainer;
+
+

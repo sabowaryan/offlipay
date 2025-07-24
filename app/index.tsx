@@ -24,6 +24,9 @@ export default function IndexScreen() {
 
   const checkInitialFlow = async () => {
     try {
+      // FOR TESTING: Reset onboarding state to always show it
+      await OnboardingService.resetOnboardingStateForTesting();
+
       // Batch async operations to reduce sequential delays
       const [hasSeenOnboarding, user] = await Promise.allSettled([
         OnboardingService.hasSeenOnboarding(),
@@ -131,3 +134,4 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
+
