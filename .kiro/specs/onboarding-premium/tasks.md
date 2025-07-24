@@ -115,6 +115,9 @@
 
 
 
+
+
+
   - Développer WelcomeIntro avec effet glassmorphism et logo animé
   - Créer WelcomeFeatures avec icônes 3D isométriques et animations de rotation
   - Implémenter WelcomePromise avec éléments néomorphisme et animations de sécurité
