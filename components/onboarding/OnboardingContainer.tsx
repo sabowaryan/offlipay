@@ -404,6 +404,18 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   }
 
   const currentScreenConfig = screens[currentScreen];
+  // Add a check here to ensure currentScreenConfig and currentScreenConfig.slides are defined
+  if (!currentScreenConfig || !currentScreenConfig.slides) {
+    console.error('currentScreenConfig or currentScreenConfig.slides is undefined');
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.BACKGROUND }]}>
+        <View style={styles.loadingContainer}>
+          <Text>Error loading onboarding content.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const IllustrationComponent = ILLUSTRATION_MAP[currentScreenConfig.illustration as keyof typeof ILLUSTRATION_MAP];
 
   return (
@@ -524,5 +536,4 @@ const createStyles = (colors: any) => StyleSheet.create({
 });
 
 export default OnboardingContainer;
-
 
