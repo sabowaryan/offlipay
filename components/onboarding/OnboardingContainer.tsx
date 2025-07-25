@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   Dimensions,
   SafeAreaView,
@@ -46,9 +47,8 @@ import WalletIllustration from './illustrations/WalletIllustration';
 import OfflineIllustration from './illustrations/OfflineIllustration';
 
 // Import new components
-import OnboardingSlideCarousel from './OnboardingSlideCarousel';
+import { OnboardingSlideCarousel } from './OnboardingSlideCarousel';
 import OnboardingGestureHandler from './OnboardingGestureHandler';
-import OnboardingTransitions from './OnboardingTransitions';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;

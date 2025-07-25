@@ -81,23 +81,14 @@ interface EnhancedGestureState {
   const opacity = useSharedValue(1);
   const rotationZ = useSharedValue(0);
   const feedbackIntensity = useSharedValue(0);
+  
+  // Worklet-safe shared values for gesture state
+  const lockedDirection = useSharedValue<GestureType | null>(null);
+  const conflictResolutionActive = useSharedValue(false);
 
-  // Enhanced gesture state management
-  const gestureState = useRef<EnhancedGestureState>({
-    isActive: false,
-    lockedDirection: null,
-    startTime: 0,
-    initialDirection: null,
-    deviceCapability: 'medium',
-    gestureHistory: [],
-    conflictResolutionActive: false,
-    lastGestureType: null,
-    consecutiveGestureCount: 0,
-  });
-
-  const [isGestureActive, setIsGestureActive] = useState(false);
-
-  // Device capability detection
+  // Device capability detection (moved before gestureState to avoid worklet issues)
+  const deviceCapability = useRef<DeviceCapability>('medium');
+  
   const detectDeviceCapability = useCallback((): DeviceCapability => {
     const screenSize = SCREEN_WIDTH * SCREEN_HEIGHT;
     const pixelRatio = Platform.select({
@@ -116,10 +107,27 @@ interface EnhancedGestureState {
     }
   }, []);
 
-  // Initialize device capability
+  // Initialize device capability early
   useEffect(() => {
-    gestureState.current.deviceCapability = detectDeviceCapability();
+    deviceCapability.current = detectDeviceCapability();
   }, [detectDeviceCapability]);
+
+  // Enhanced gesture state management (separate from worklet-accessed objects)
+  const gestureState = useRef<EnhancedGestureState>({
+    isActive: false,
+    lockedDirection: null,
+    startTime: 0,
+    initialDirection: null,
+    deviceCapability: deviceCapability.current,
+    gestureHistory: [],
+    conflictResolutionActive: false,
+    lastGestureType: null,
+    consecutiveGestureCount: 0,
+  });
+
+  const [isGestureActive, setIsGestureActive] = useState(false);
+  const [currentLockedDirection, setCurrentLockedDirection] = useState<GestureType | null>(null);
+  const [isConflictActive, setIsConflictActive] = useState(false);
 
   // Enhanced adaptive thresholds based on device capabilities
   const getAdaptiveThresholds = useCallback(() => {
@@ -294,6 +302,8 @@ interface EnhancedGestureState {
       const ratio = horizontalConfidence / (verticalConfidence + 0.1);
       if (ratio >= dominanceThreshold && absX > thresholds.directionLock) {
         gestureState.current.lockedDirection = 'horizontal';
+        lockedDirection.value = 'horizontal';
+        runOnJS(setCurrentLockedDirection)('horizontal');
         const direction = translationX > 0 ? 'right' : 'left';
         return { direction, type: 'horizontal', confidence: horizontalConfidence };
       }
@@ -301,6 +311,8 @@ interface EnhancedGestureState {
       const ratio = verticalConfidence / (horizontalConfidence + 0.1);
       if (ratio >= dominanceThreshold && absY > thresholds.directionLock) {
         gestureState.current.lockedDirection = 'vertical';
+        lockedDirection.value = 'vertical';
+        runOnJS(setCurrentLockedDirection)('vertical');
         const direction = translationY > 0 ? 'down' : 'up';
         return { direction, type: 'vertical', confidence: verticalConfidence };
       }
@@ -310,14 +322,20 @@ interface EnhancedGestureState {
     const simultaneousThreshold = GESTURE_CONFLICT_PREVENTION.SIMULTANEOUS_THRESHOLD;
     if (absX > simultaneousThreshold && absY > simultaneousThreshold) {
       gestureState.current.conflictResolutionActive = true;
+      conflictResolutionActive.value = true;
+      runOnJS(setIsConflictActive)(true);
       
       // Use velocity to break ties in simultaneous gestures
       if (absVelX > absVelY * GESTURE_CONFLICT_PREVENTION.VELOCITY_DOMINANCE_RATIO) {
         gestureState.current.lockedDirection = 'horizontal';
+        lockedDirection.value = 'horizontal';
+        runOnJS(setCurrentLockedDirection)('horizontal');
         const direction = translationX > 0 ? 'right' : 'left';
         return { direction, type: 'horizontal', confidence: 0.6 };
       } else if (absVelY > absVelX * GESTURE_CONFLICT_PREVENTION.VELOCITY_DOMINANCE_RATIO) {
         gestureState.current.lockedDirection = 'vertical';
+        lockedDirection.value = 'vertical';
+        runOnJS(setCurrentLockedDirection)('vertical');
         const direction = translationY > 0 ? 'down' : 'up';
         return { direction, type: 'vertical', confidence: 0.6 };
       }
@@ -402,7 +420,15 @@ interface EnhancedGestureState {
       lastGestureType: previousLastGestureType,
       consecutiveGestureCount: previousConsecutiveCount,
     };
+    
+    // Reset worklet-safe shared values
+    lockedDirection.value = null;
+    conflictResolutionActive.value = false;
+    
+    // Reset UI state
     setIsGestureActive(false);
+    setCurrentLockedDirection(null);
+    setIsConflictActive(false);
   }, []);
 
   // Enhanced pan gesture with intelligent direction detection and adaptive feedback
@@ -578,9 +604,9 @@ interface EnhancedGestureState {
 
     return {
       opacity: Math.min(finalOpacity, 0.4), // Cap maximum opacity
-      backgroundColor: gestureState.current.lockedDirection === 'horizontal' 
+      backgroundColor: lockedDirection.value === 'horizontal' 
         ? '#007AFF' 
-        : gestureState.current.lockedDirection === 'vertical'
+        : lockedDirection.value === 'vertical'
         ? '#34C759'
         : '#007AFF',
     };
@@ -615,23 +641,23 @@ interface EnhancedGestureState {
                 styles.horizontalIndicator,
                 confidenceIndicatorStyle,
                 {
-                  opacity: gestureState.current.lockedDirection === 'horizontal' ? 1 : 0.3,
-                  backgroundColor: gestureState.current.lockedDirection === 'horizontal' ? '#007AFF' : '#8E8E93',
+                  opacity: currentLockedDirection === 'horizontal' ? 1 : 0.3,
+                  backgroundColor: currentLockedDirection === 'horizontal' ? '#007AFF' : '#8E8E93',
                 }
               ]} />
               <Animated.View style={[
                 styles.verticalIndicator,
                 confidenceIndicatorStyle,
                 {
-                  opacity: gestureState.current.lockedDirection === 'vertical' ? 1 : 0.3,
-                  backgroundColor: gestureState.current.lockedDirection === 'vertical' ? '#34C759' : '#8E8E93',
+                  opacity: currentLockedDirection === 'vertical' ? 1 : 0.3,
+                  backgroundColor: currentLockedDirection === 'vertical' ? '#34C759' : '#8E8E93',
                 }
               ]} />
             </View>
           )}
 
           {/* Conflict resolution indicator */}
-          {gestureState.current.conflictResolutionActive && (
+          {isConflictActive && (
             <View style={styles.conflictIndicator}>
               <Animated.View style={[
                 styles.conflictDot,

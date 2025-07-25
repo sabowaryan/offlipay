@@ -1,16 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { secureStorage } from '@/utils/secureStorage/';
-
-// Types pour l'onboarding
-export interface OnboardingScreenConfig {
-    id: string;
-    title: string;
-    subtitle: string;
-    illustration: string;
-    animationType: 'fadeIn' | 'slideUp' | 'scale' | 'custom';
-    interactionType?: 'tap' | 'swipe' | 'none';
-    duration: number;
-}
+import { OnboardingScreenConfig, OnboardingSlideConfig } from '@/components/onboarding/types';
 
 export interface OnboardingSettings {
     screens: OnboardingScreenConfig[];
@@ -74,6 +64,24 @@ export class OnboardingService {
             animationType: 'fadeIn',
             interactionType: 'tap',
             duration: 2000,
+            slides: [
+                {
+                    id: 'welcome_1',
+                    title: 'Bienvenue sur OffliPay',
+                    subtitle: 'Votre portefeuille numérique pour des paiements simples et sécurisés',
+                    animationType: 'fadeIn',
+                    illustration: 'WelcomeIntro',
+                    duration: 2000
+                },
+                {
+                    id: 'welcome_2',
+                    title: 'Paiements hors ligne',
+                    subtitle: 'Effectuez des transactions même sans connexion internet',
+                    animationType: 'slideUp',
+                    illustration: 'WelcomeFeatures',
+                    duration: 2000
+                }
+            ]
         },
         {
             id: 'qr_payments',
@@ -83,6 +91,24 @@ export class OnboardingService {
             animationType: 'slideUp',
             interactionType: 'tap',
             duration: 2500,
+            slides: [
+                {
+                    id: 'qr_1',
+                    title: 'Payez en un scan',
+                    subtitle: 'Scannez des QR codes pour payer instantanément',
+                    animationType: 'slideUp',
+                    illustration: 'QRScanDemo',
+                    duration: 2500
+                },
+                {
+                    id: 'qr_2',
+                    title: 'Générez vos QR codes',
+                    subtitle: 'Créez des QR codes pour recevoir des paiements',
+                    animationType: 'scale',
+                    illustration: 'QRGenerateDemo',
+                    duration: 2500
+                }
+            ]
         },
         {
             id: 'wallet',
@@ -92,6 +118,24 @@ export class OnboardingService {
             animationType: 'scale',
             interactionType: 'swipe',
             duration: 3000,
+            slides: [
+                {
+                    id: 'wallet_1',
+                    title: 'Gérez votre argent',
+                    subtitle: 'Suivez votre solde et vos transactions en temps réel',
+                    animationType: 'scale',
+                    illustration: 'WalletOverview',
+                    duration: 3000
+                },
+                {
+                    id: 'wallet_2',
+                    title: 'Rechargez facilement',
+                    subtitle: 'Via agents, vouchers ou virement bancaire',
+                    animationType: 'fadeIn',
+                    illustration: 'CashInMethods',
+                    duration: 3000
+                }
+            ]
         },
         {
             id: 'offline',
@@ -101,6 +145,24 @@ export class OnboardingService {
             animationType: 'custom',
             interactionType: 'tap',
             duration: 2500,
+            slides: [
+                {
+                    id: 'offline_1',
+                    title: 'Toujours connecté',
+                    subtitle: 'Vos paiements fonctionnent même hors ligne',
+                    animationType: 'custom',
+                    illustration: 'OfflineCapability',
+                    duration: 2500
+                },
+                {
+                    id: 'offline_2',
+                    title: 'Synchronisation automatique',
+                    subtitle: 'Vos données se synchronisent dès que vous êtes en ligne',
+                    animationType: 'slideUp',
+                    illustration: 'SyncProcess',
+                    duration: 2500
+                }
+            ]
         },
     ];
 

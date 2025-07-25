@@ -15,6 +15,17 @@ export enum OnboardingErrorCode {
   NAVIGATION_ERROR = 'NAV_001',
 }
 
+// Slide configuration for premium onboarding
+export interface OnboardingSlideConfig {
+  id: string;
+  title: string;
+  subtitle: string;
+  content?: string;
+  animationType?: AnimationType;
+  illustration: string;
+  duration: number;
+}
+
 // Screen configuration
 export interface OnboardingScreenConfig {
   id: string;
@@ -24,6 +35,7 @@ export interface OnboardingScreenConfig {
   animationType: AnimationType;
   interactionType?: InteractionType;
   duration: number;
+  slides: OnboardingSlideConfig[]; // Add slides property
 }
 
 // Global onboarding settings
