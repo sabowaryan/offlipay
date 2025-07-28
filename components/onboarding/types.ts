@@ -2,10 +2,22 @@ import { ComponentType } from 'react';
 
 // Animation types
 export type AnimationType = 'fadeIn' | 'slideUp' | 'scale' | 'custom';
+export type SlideAnimationType = 'fadeIn' | 'slideUp' | 'scale' | 'morphing' | 'parallax';
 export type InteractionType = 'tap' | 'swipe' | 'none';
 export type AnimationSpeed = 'slow' | 'normal' | 'fast';
 export type ProgressIndicatorStyle = 'dots' | 'bar' | 'steps';
 export type ThemeType = 'light' | 'dark' | 'auto';
+
+// Slide configuration
+export interface OnboardingSlide {
+  id: string;
+  illustration: string;
+  title: string;
+  subtitle: string;
+  animationType: SlideAnimationType;
+  duration: number;
+  interactionHint?: string;
+}
 
 // Error codes for onboarding
 export enum OnboardingErrorCode {
@@ -24,6 +36,7 @@ export interface OnboardingScreenConfig {
   animationType: AnimationType;
   interactionType?: InteractionType;
   duration: number;
+  slides: OnboardingSlide[];
 }
 
 // Global onboarding settings
@@ -49,6 +62,10 @@ export interface OnboardingState {
   totalScreens: number;
   isAnimating: boolean;
   hasSeenOnboarding: boolean;
+  currentSlide?: number;
+  completedAt?: Date;
+  skippedAt?: Date;
+  version: string;
 }
 
 // OnboardingScreen props
@@ -90,6 +107,7 @@ export interface OnboardingPreferences {
 export interface IllustrationProps {
   animated?: boolean;
   theme: ThemeType;
+  size?: number;
   onAnimationComplete?: () => void;
 }
 

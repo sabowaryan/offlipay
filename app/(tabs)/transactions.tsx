@@ -3,7 +3,6 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   ScrollView,
   RefreshControl,
   TouchableOpacity,
@@ -15,6 +14,7 @@ import {
   TextInput,
   Share
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WalletService } from '@/services/WalletService';
 import { Transaction } from '@/types';
 import TransactionItem from '@/components/TransactionItem';

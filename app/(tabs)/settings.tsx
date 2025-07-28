@@ -3,7 +3,6 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -14,6 +13,7 @@ import {
   Platform,
   ActivityIndicator
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { WalletService } from '@/services/WalletService';
 import { User } from '@/types';

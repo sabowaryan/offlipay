@@ -1,3 +1,3 @@
-export { QRScanDemo } from './QRScanDemo';
-export { QRGenerateDemo } from './QRGenerateDemo';
-export { PaymentSuccess } from './PaymentSuccess';
+export { default as QRScanDemo } from './QRScanDemo';
+export { default as QRGenerateDemo } from './QRGenerateDemo';
+export { default as PaymentSuccess } from './PaymentSuccess';

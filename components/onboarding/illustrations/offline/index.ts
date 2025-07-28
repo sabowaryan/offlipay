@@ -1,3 +1,3 @@
-export { OfflineCapability } from './OfflineCapability';
-export { SyncProcess } from './SyncProcess';
-export { SecurityFeatures } from './SecurityFeatures';
+export { default as OfflineCapability } from './OfflineCapability';
+export { default as SyncProcess } from './SyncProcess';
+export { default as SecurityFeatures } from './SecurityFeatures';

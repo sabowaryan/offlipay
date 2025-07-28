@@ -1,27 +1,23 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
-  Dimensions,
-  SafeAreaView,
   StatusBar,
   Platform,
   BackHandler,
   Alert,
   InteractionManager,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSpring,
   runOnJS,
-  interpolate,
 } from 'react-native-reanimated';
 import {
   GestureHandlerRootView,
-  Gesture,
-  GestureDetector,
 } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/native';
@@ -29,38 +25,18 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { OnboardingService } from '@/services/OnboardingService';
 import { OnboardingContainerProps, OnboardingScreenConfig } from './types';
-import OnboardingScreen from './OnboardingScreen';
 import { OnboardingProgress } from './OnboardingProgress';
 import OnboardingButton from './OnboardingButton';
 import {
-  deferHeavyOperation,
-  batchAsyncOperations,
   getOptimizedAnimationConfig,
   getDeviceCapabilities
 } from '@/utils/performanceOptimizer';
 
-// Import illustrations
-import WelcomeIllustration from './illustrations/WelcomeIllustration';
-import QRPaymentIllustration from './illustrations/QRPaymentIllustration';
-import WalletIllustration from './illustrations/WalletIllustration';
-import OfflineIllustration from './illustrations/OfflineIllustration';
-
 // Import new components
-import OnboardingSlideCarousel from './OnboardingSlideCarousel';
+import { OnboardingSlideCarousel } from './OnboardingSlideCarousel';
 import OnboardingGestureHandler from './OnboardingGestureHandler';
-import OnboardingTransitions from './OnboardingTransitions';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
-const SWIPE_VELOCITY_THRESHOLD = 500;
 
-// Map illustration names to components
-const ILLUSTRATION_MAP = {
-  welcome: WelcomeIllustration,
-  qr_payment: QRPaymentIllustration,
-  wallet: WalletIllustration,
-  offline: OfflineIllustration,
-};
 
 const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   onComplete,
@@ -78,13 +54,10 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   const animationConfig = getOptimizedAnimationConfig();
 
   // Animation values
-  const translateX = useSharedValue(0);
   const screenOpacity = useSharedValue(1);
   const progressOpacity = useSharedValue(0);
-  const slideProgress = useSharedValue(0); // New shared value for slide progress
 
   // Refs
-  const panRef = useRef(null);
   const autoProgressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadStartTime = useRef<number>(Date.now());
 
@@ -94,7 +67,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
     progressOpacity.value = withTiming(1, {
       duration: animationConfig.duration,
     });
-  }, []);
+  }, [progressOpacity, animationConfig.duration]);
 
   // Load onboarding configuration with optimized performance
   useEffect(() => {
@@ -161,7 +134,6 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
         return;
       }
 
-      const navigationStartTime = Date.now();
       setIsAnimating(true);
 
       // Clear auto-progress timer
@@ -202,7 +174,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
     },
-    [isAnimating, screens.length, screenOpacity, saveProgress, deviceCapabilities, animationConfig]
+    [isAnimating, screens.length, screenOpacity, saveProgress, deviceCapabilities.supportsComplexAnimations, deviceCapabilities.supportsHeavyOperations, animationConfig.duration]
   );
 
   // Handle slide navigation
@@ -217,6 +189,17 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
     },
     [currentScreen, screens, saveProgress]
   );
+
+  // Handle completion
+  const handleComplete = useCallback(async () => {
+    try {
+      await OnboardingService.markOnboardingCompleted();
+      onComplete();
+    } catch (error) {
+      console.error('Erreur lors de la finalisation de l\'onboarding:', error);
+      onComplete(); // Continue anyway
+    }
+  }, [onComplete]);
 
   // Handle next screen
   const handleNextScreen = useCallback(() => {
@@ -253,17 +236,6 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
     }
   }, [currentSlide, navigateToSlide, handlePreviousScreen]);
 
-  // Handle completion
-  const handleComplete = useCallback(async () => {
-    try {
-      await OnboardingService.markOnboardingCompleted();
-      onComplete();
-    } catch (error) {
-      console.error('Erreur lors de la finalisation de l\'onboarding:', error);
-      onComplete(); // Continue anyway
-    }
-  }, [onComplete]);
-
   // Handle skip
   const handleSkip = useCallback(() => {
     if (!skipEnabled) return;
@@ -293,57 +265,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
     );
   }, [skipEnabled, onSkip]);
 
-  // Create pan gesture handler using the new API
-  const panGesture = Gesture.Pan()
-    .activeOffsetX([-20, 20])
-    .failOffsetY([-10, 10])
-    .enabled(!isAnimating)
-    .onUpdate((event) => {
-      translateX.value = event.translationX;
-    })
-    .onEnd((event) => {
-      if (isAnimating) return;
 
-      const { translationX, velocityX } = event;
-
-      // Determine swipe direction and strength
-      const isSwipeLeft = translationX < -SWIPE_THRESHOLD || velocityX < -SWIPE_VELOCITY_THRESHOLD;
-      const isSwipeRight = translationX > SWIPE_THRESHOLD || velocityX > SWIPE_VELOCITY_THRESHOLD;
-
-      if (isSwipeLeft) {
-        runOnJS(handleNextScreen)();
-      } else if (isSwipeRight) {
-        runOnJS(handlePreviousScreen)();
-      }
-
-      // Reset gesture values
-      translateX.value = withSpring(0);
-    });
-
-  // Handle screen interaction
-  const handleScreenInteraction = useCallback(() => {
-    if (!isAnimating) {
-      handleNextSlide();
-    }
-  }, [isAnimating, handleNextSlide]);
-
-  // Auto-progress functionality (optional)
-  const startAutoProgress = useCallback(() => {
-    if (autoProgressTimer.current) {
-      clearTimeout(autoProgressTimer.current);
-    }
-
-    const currentScreenConfig = screens[currentScreen];
-    if (currentScreenConfig && currentScreenConfig.duration > 0) {
-      autoProgressTimer.current = setTimeout(() => {
-        if (currentSlide < currentScreenConfig.slides.length - 1) {
-          handleNextSlide();
-        } else if (currentScreen < screens.length - 1) {
-          handleNextScreen();
-        }
-      }, currentScreenConfig.duration);
-    }
-  }, [currentScreen, currentSlide, screens, handleNextSlide, handleNextScreen]);
 
   // Handle Android back button
   useFocusEffect(
@@ -376,22 +298,13 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   // Animated styles
   const containerAnimatedStyle = useAnimatedStyle(() => ({
     opacity: screenOpacity.value,
-    transform: [
-      {
-        translateX: interpolate(
-          translateX.value,
-          [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
-          [-SCREEN_WIDTH * 0.3, 0, SCREEN_WIDTH * 0.3]
-        ),
-      },
-    ],
   }));
 
   const progressAnimatedStyle = useAnimatedStyle(() => ({
     opacity: progressOpacity.value,
   }));
 
-  const styles = createStyles(colors);
+  const styles = createStyles();
 
   if (isLoading || screens.length === 0) {
     return (
@@ -404,19 +317,40 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   }
 
   const currentScreenConfig = screens[currentScreen];
-  // Add a check here to ensure currentScreenConfig and currentScreenConfig.slides are defined
-  if (!currentScreenConfig || !currentScreenConfig.slides) {
-    console.error('currentScreenConfig or currentScreenConfig.slides is undefined');
+
+  // Add detailed debugging and error handling
+  if (!currentScreenConfig) {
+    console.error('currentScreenConfig is undefined', {
+      currentScreen,
+      screensLength: screens.length,
+      screens: screens.map(s => ({ id: s.id, title: s.title }))
+    });
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.BACKGROUND }]}>
         <View style={styles.loadingContainer}>
-          <Text>Error loading onboarding content.</Text>
+          <Text style={{ color: colors.TEXT }}>Error: Screen configuration not found</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  const IllustrationComponent = ILLUSTRATION_MAP[currentScreenConfig.illustration as keyof typeof ILLUSTRATION_MAP];
+  if (!currentScreenConfig.slides || !Array.isArray(currentScreenConfig.slides)) {
+    console.error('currentScreenConfig.slides is invalid', {
+      currentScreen,
+      screenId: currentScreenConfig.id,
+      slides: currentScreenConfig.slides,
+      hasSlides: 'slides' in currentScreenConfig
+    });
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.BACKGROUND }]}>
+        <View style={styles.loadingContainer}>
+          <Text style={{ color: colors.TEXT }}>Error: Slides configuration not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+
 
   return (
     <GestureHandlerRootView style={styles.container}>
@@ -500,7 +434,7 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   );
 };
 
-const createStyles = (colors: any) => StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
   },

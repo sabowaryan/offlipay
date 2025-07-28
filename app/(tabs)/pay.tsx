@@ -3,7 +3,6 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   TouchableOpacity, 
   TextInput,
   Alert,
@@ -16,6 +15,7 @@ import {
   useWindowDimensions,
   RefreshControl
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { WalletService } from '@/services/WalletService';
 import { User, UserMode } from '@/types';

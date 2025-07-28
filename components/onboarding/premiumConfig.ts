@@ -6,12 +6,14 @@ import {
   GestureConfig,
   PerformanceConfig,
   AccessibilityConfig,
-  ResponsiveConfig,
-  Dimensions,
-  DeviceCapability,
-  AnimationLevel,
-  GestureThresholds
-} from '../../types';
+  ResponsiveConfig
+} from './types/PremiumOnboardingConfig';
+
+// Additional types that might be missing
+type Dimensions = { width: number; height: number };
+type DeviceCapability = 'low' | 'medium' | 'high';
+type AnimationLevel = 'minimal' | 'standard' | 'premium';
+type GestureThresholds = { horizontal: number; vertical: number; velocity: number };
 
 // Configuration par défaut pour l'onboarding premium
 export const defaultPremiumConfig: PremiumOnboardingConfig = {

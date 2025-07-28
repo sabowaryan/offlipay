@@ -1,3 +1,3 @@
-export { WalletOverview } from './WalletOverview';
-export { CashInMethods } from './CashInMethods';
-export { TransactionHistory } from './TransactionHistory';
+export { default as WalletOverview } from './WalletOverview';
+export { default as CashInMethods } from './CashInMethods';
+export { default as TransactionHistory } from './TransactionHistory';

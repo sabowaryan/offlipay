@@ -1,8 +1,8 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
-import { WelcomeIntro } from '@/components/onboarding/illustrations/welcome/WelcomeIntro';
-import { WelcomeFeatures } from '@/components/onboarding/illustrations/welcome/WelcomeFeatures';
-import { WelcomePromise } from '@/components/onboarding/illustrations/welcome/WelcomePromise';
+import WelcomeIntro from '@/components/onboarding/illustrations/welcome/WelcomeIntro';
+import WelcomeFeatures from '@/components/onboarding/illustrations/welcome/WelcomeFeatures';
+import WelcomePromise from '@/components/onboarding/illustrations/welcome/WelcomePromise';
 
 import { View } from 'react-native';
 
@@ -37,18 +37,20 @@ jest.mock('@/hooks/useThemeColors', () => ({
 // Mock lucide-react-native icons
 jest.mock('lucide-react-native', () => {
   const mockReact = require('react');
+  const mockIcon = (props: any) => mockReact.createElement('View', props);
+  
   return {
-    QrCode: ({ ...props }: any) => mockReact.createElement('View', props),
-    Wallet: ({ ...props }: any) => mockReact.createElement('View', props),
-    Shield: ({ ...props }: any) => mockReact.createElement('View', props),
-    Zap: ({ ...props }: any) => mockReact.createElement('View', props),
-    Users: ({ ...props }: any) => mockReact.createElement('View', props),
-    Globe: ({ ...props }: any) => mockReact.createElement('View', props),
-    Lock: ({ ...props }: any) => mockReact.createElement('View', props),
-    CheckCircle: ({ ...props }: any) => mockReact.createElement('View', props),
-    Clock: ({ ...props }: any) => mockReact.createElement('View', props),
+    QrCode: mockIcon,
+    Wallet: mockIcon,
+    Shield: mockIcon,
+    Zap: mockIcon,
+    Users: mockIcon,
+    Globe: mockIcon,
+    Lock: mockIcon,
+    CheckCircle: mockIcon,
+    Clock: mockIcon,
   };
-}));
+});
 
 describe('Welcome Illustrations', () => {
   const defaultProps = {

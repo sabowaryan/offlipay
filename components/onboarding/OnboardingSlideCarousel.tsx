@@ -14,10 +14,19 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   runOnJS,
-  interpolate,
   cancelAnimation,
 } from 'react-native-reanimated';
-import { OnboardingSlideCarouselProps, SlideConfig, AnimationType, IllustrationProps } from '@/types';
+import { OnboardingSlide, IllustrationProps } from './types';
+
+// Props interface for the carousel
+interface OnboardingSlideCarouselProps {
+  slides: OnboardingSlide[];
+  currentSlide: number;
+  onSlideChange: (index: number) => void;
+  autoProgress?: boolean;
+  autoProgressDelay?: number;
+  theme: 'light' | 'dark';
+}
 import * as Illustrations from './illustrations';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -38,15 +47,6 @@ export const OnboardingSlideCarousel: React.FC<OnboardingSlideCarouselProps> = (
   const [isGestureActive, setIsGestureActive] = useState(false);
 
   // Auto-progression logic
-  const startAutoProgress = useCallback(() => {
-    if (!autoProgress || slides.length <= 1) return;
-
-    autoProgressTimer.current = setTimeout(() => {
-      const nextSlide = (currentSlide + 1) % slides.length;
-      onSlideChange(nextSlide);
-    }, autoProgressDelay);
-  }, [autoProgress, autoProgressDelay, currentSlide, slides.length, onSlideChange]);
-
   const stopAutoProgress = useCallback(() => {
     if (autoProgressTimer.current) {
       clearTimeout(autoProgressTimer.current);
@@ -57,11 +57,16 @@ export const OnboardingSlideCarousel: React.FC<OnboardingSlideCarouselProps> = (
   // Reset auto-progress when slide changes
   useEffect(() => {
     stopAutoProgress();
-    if (!isGestureActive) {
-      startAutoProgress();
+    
+    if (!isGestureActive && autoProgress && slides.length > 1) {
+      autoProgressTimer.current = setTimeout(() => {
+        const nextSlide = (currentSlide + 1) % slides.length;
+        onSlideChange(nextSlide);
+      }, autoProgressDelay);
     }
+    
     return stopAutoProgress;
-  }, [currentSlide, isGestureActive, startAutoProgress, stopAutoProgress]);
+  }, [currentSlide, isGestureActive, autoProgress, autoProgressDelay, slides.length, onSlideChange, stopAutoProgress]);
 
   // Animate to current slide
   useEffect(() => {
@@ -114,153 +119,55 @@ export const OnboardingSlideCarousel: React.FC<OnboardingSlideCarouselProps> = (
       runOnJS(setIsGestureActive)(false);
     });
 
-  // Animation styles for different transition types
-  const getSlideAnimationStyle = useCallback((slideIndex: number, animationType: AnimationType) => {
-    const inputRange = [
-      (slideIndex - 1) * SLIDE_HEIGHT,
-      slideIndex * SLIDE_HEIGHT,
-      (slideIndex + 1) * SLIDE_HEIGHT,
-    ];
+  // Simple animated style for all slides - using basic slide animation only
+  const containerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
 
-    switch (animationType) {
-      case 'fadeIn':
-        return useAnimatedStyle(() => {
-          const translateYValue = -translateY.value;
-          const fadeOpacity = interpolate(
-            translateYValue,
-            inputRange,
-            [0.3, 1, 0.3],
-            'clamp'
-          );
-          return {
-            opacity: fadeOpacity,
-            transform: [{ translateY: translateY.value + slideIndex * SLIDE_HEIGHT }],
-          };
-        });
-
-      case 'scale':
-        return useAnimatedStyle(() => {
-          const translateYValue = -translateY.value;
-          const scaleValue = interpolate(
-            translateYValue,
-            inputRange,
-            [0.8, 1, 0.8],
-            'clamp'
-          );
-          const scaleOpacity = interpolate(
-            translateYValue,
-            inputRange,
-            [0.5, 1, 0.5],
-            'clamp'
-          );
-          return {
-            opacity: scaleOpacity,
-            transform: [
-              { translateY: translateY.value + slideIndex * SLIDE_HEIGHT },
-              { scale: scaleValue },
-            ],
-          };
-        });
-
-      case 'morphing':
-        return useAnimatedStyle(() => {
-          const translateYValue = -translateY.value;
-          const morphScale = interpolate(
-            translateYValue,
-            inputRange,
-            [0.9, 1, 0.9],
-            'clamp'
-          );
-          const morphOpacity = interpolate(
-            translateYValue,
-            inputRange,
-            [0.4, 1, 0.4],
-            'clamp'
-          );
-          const morphRotation = interpolate(
-            translateYValue,
-            inputRange,
-            [5, 0, -5],
-            'clamp'
-          );
-          return {
-            opacity: morphOpacity,
-            transform: [
-              { translateY: translateY.value + slideIndex * SLIDE_HEIGHT },
-              { scale: morphScale },
-              { rotateX: `${morphRotation}deg` },
-            ],
-          };
-        });
-
-      case 'parallax':
-        return useAnimatedStyle(() => {
-          const translateYValue = -translateY.value;
-          const parallaxOffset = interpolate(
-            translateYValue,
-            inputRange,
-            [-30, 0, 30],
-            'clamp'
-          );
-          const parallaxOpacity = interpolate(
-            translateYValue,
-            inputRange,
-            [0.6, 1, 0.6],
-            'clamp'
-          );
-          return {
-            opacity: parallaxOpacity,
-            transform: [
-              { translateY: translateY.value + slideIndex * SLIDE_HEIGHT + parallaxOffset },
-            ],
-          };
-        });
-
-      default: // 'slideUp'
-        return useAnimatedStyle(() => ({
-          transform: [{ translateY: translateY.value + slideIndex * SLIDE_HEIGHT }],
-        }));
-    }
-  }, [translateY]);
-
-  // Get illustration component dynamically
+  // Get illustration component dynamically with error handling
   const getIllustrationComponent = (illustrationName: string) => {
-    // Map illustration names to actual components
-    const illustrationMap: Record<string, React.ComponentType<IllustrationProps>> = {
-      // Welcome illustrations
-      'WelcomeIntro': Illustrations.WelcomeIntro,
-      'WelcomeFeatures': Illustrations.WelcomeFeatures,
-      'WelcomePromise': Illustrations.WelcomePromise,
-      // Payment illustrations
-      'QRScanDemo': Illustrations.QRScanDemo,
-      'QRGenerateDemo': Illustrations.QRGenerateDemo,
-      'PaymentSuccess': Illustrations.PaymentSuccess,
-      // Wallet illustrations
-      'WalletOverview': Illustrations.WalletOverview,
-      'CashInMethods': Illustrations.CashInMethods,
-      'TransactionHistory': Illustrations.TransactionHistory,
-      // Offline illustrations
-      'OfflineCapability': Illustrations.OfflineCapability,
-      'SyncProcess': Illustrations.SyncProcess,
-      'SecurityFeatures': Illustrations.SecurityFeatures,
-    };
+    try {
+      // Map illustration names to actual components
+      const illustrationMap: Record<string, React.ComponentType<IllustrationProps>> = {
+        // Welcome illustrations
+        'WelcomeIntro': Illustrations.WelcomeIntro || null,
+        'WelcomeFeatures': Illustrations.WelcomeFeatures || null,
+        'WelcomePromise': Illustrations.WelcomePromise || null,
+        // Payment illustrations
+        'QRScanDemo': Illustrations.QRScanDemo || null,
+        'QRGenerateDemo': Illustrations.QRGenerateDemo || null,
+        'PaymentSuccess': Illustrations.PaymentSuccess || null,
+        // Wallet illustrations
+        'WalletOverview': Illustrations.WalletOverview || null,
+        'CashInMethods': Illustrations.CashInMethods || null,
+        'TransactionHistory': Illustrations.TransactionHistory || null,
+        // Offline illustrations
+        'OfflineCapability': Illustrations.OfflineCapability || null,
+        'SyncProcess': Illustrations.SyncProcess || null,
+        'SecurityFeatures': Illustrations.SecurityFeatures || null,
+      };
 
-    return illustrationMap[illustrationName];
+      return illustrationMap[illustrationName] || null;
+    } catch (error) {
+      console.warn(`Failed to load illustration: ${illustrationName}`, error);
+      return null;
+    }
   };
 
-  // Render individual slide
-  const renderSlide = (slide: SlideConfig, index: number) => {
-    const animatedStyle = getSlideAnimationStyle(index, slide.animationType);
+  // Render individual slide - simplified without complex animations
+  const renderSlide = (slide: OnboardingSlide, index: number) => {
     const IllustrationComponent = getIllustrationComponent(slide.illustration);
     const isCurrentSlide = index === currentSlide;
 
     return (
-      <Animated.View
+      <View
         key={slide.id}
         style={[
           styles.slide,
-          animatedStyle,
-          { backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff' }
+          { 
+            backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
+            top: index * SLIDE_HEIGHT,
+          }
         ]}
       >
         <View style={styles.slideContent}>
@@ -325,14 +232,14 @@ export const OnboardingSlideCarousel: React.FC<OnboardingSlideCarouselProps> = (
             ))}
           </View>
         </View>
-      </Animated.View>
+      </View>
     );
   };
 
   return (
     <GestureHandlerRootView style={styles.container}>
       <GestureDetector gesture={panGesture}>
-        <Animated.View style={styles.carouselContainer}>
+        <Animated.View style={[styles.carouselContainer, containerAnimatedStyle]}>
           {slides.map((slide, index) => renderSlide(slide, index))}
         </Animated.View>
       </GestureDetector>

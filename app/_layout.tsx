@@ -14,6 +14,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StorageService } from '@/utils/storage';
 import * as Sentry from '@sentry/react-native';
 import { QRScannerProvider } from '@/components/QRScannerProvider';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 Sentry.init({
   dsn: 'https://dc4cee654643a25ea8bbe4e063aa2883@o4509445026152448.ingest.us.sentry.io/4509623728013312',
@@ -32,6 +33,7 @@ Sentry.init({
 });
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
+// Keep the splash screen visible while we load resources
 SplashScreen.preventAutoHideAsync();
 
 export default Sentry.wrap(function RootLayout() {
@@ -46,8 +48,8 @@ export default Sentry.wrap(function RootLayout() {
 
   useEffect(() => {
     if (loaded || error) {
-      // Delay splash screen hiding to prevent flash
-      setTimeout(() => SplashScreen.hideAsync(), 100);
+      // Hide splash screen once fonts are loaded
+      SplashScreen.hideAsync();
     }
   }, [loaded, error]);
 
@@ -76,13 +78,15 @@ export default Sentry.wrap(function RootLayout() {
   }
 
   return (
-    <QRScannerProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </QRScannerProvider>
+    <SafeAreaProvider>
+      <QRScannerProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </QRScannerProvider>
+    </SafeAreaProvider>
   );
 });

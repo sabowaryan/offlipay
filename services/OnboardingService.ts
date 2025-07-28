@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { secureStorage } from '@/utils/secureStorage/';
+import { defaultPremiumConfig } from '@/components/onboarding/premiumConfig';
+import { PremiumScreenConfig } from '@/components/onboarding/types/PremiumOnboardingConfig';
 
-// Types pour l'onboarding
+// Types pour l'onboarding - Updated to support slides
 export interface OnboardingScreenConfig {
     id: string;
     title: string;
@@ -10,6 +12,15 @@ export interface OnboardingScreenConfig {
     animationType: 'fadeIn' | 'slideUp' | 'scale' | 'custom';
     interactionType?: 'tap' | 'swipe' | 'none';
     duration: number;
+    slides: Array<{
+        id: string;
+        illustration: string;
+        title: string;
+        subtitle: string;
+        animationType: 'fadeIn' | 'slideUp' | 'scale' | 'morphing' | 'parallax';
+        duration: number;
+        interactionHint?: string;
+    }>;
 }
 
 export interface OnboardingSettings {
@@ -64,7 +75,7 @@ export class OnboardingService {
     private static readonly ONBOARDING_PREFERENCES_KEY = 'onboarding_preferences';
     private static readonly ONBOARDING_VERSION = '1.0.0';
 
-    // Configuration par défaut des écrans d'onboarding
+    // Configuration par défaut des écrans d'onboarding - Updated to use premium config
     private static readonly DEFAULT_SCREENS: OnboardingScreenConfig[] = [
         {
             id: 'welcome',
@@ -74,6 +85,35 @@ export class OnboardingService {
             animationType: 'fadeIn',
             interactionType: 'tap',
             duration: 2000,
+            slides: [
+                {
+                    id: 'welcome-intro',
+                    illustration: 'WelcomeIntro',
+                    title: 'Bienvenue dans OffliPay',
+                    subtitle: 'L\'avenir des paiements est arrivé',
+                    animationType: 'fadeIn',
+                    duration: 3000,
+                    interactionHint: 'Glissez vers le haut pour continuer'
+                },
+                {
+                    id: 'welcome-features',
+                    illustration: 'WelcomeFeatures',
+                    title: 'Fonctionnalités Avancées',
+                    subtitle: 'Paiements, portefeuille, et bien plus',
+                    animationType: 'scale',
+                    duration: 3500,
+                    interactionHint: 'Découvrez nos fonctionnalités'
+                },
+                {
+                    id: 'welcome-promise',
+                    illustration: 'WelcomePromise',
+                    title: 'Notre Promesse',
+                    subtitle: 'Sécurisé, simple, toujours disponible',
+                    animationType: 'morphing',
+                    duration: 4000,
+                    interactionHint: 'Glissez pour continuer'
+                }
+            ]
         },
         {
             id: 'qr_payments',
@@ -83,6 +123,35 @@ export class OnboardingService {
             animationType: 'slideUp',
             interactionType: 'tap',
             duration: 2500,
+            slides: [
+                {
+                    id: 'qr-scan',
+                    illustration: 'QRScanDemo',
+                    title: 'Scanner un QR Code',
+                    subtitle: 'Paiements instantanés et sécurisés',
+                    animationType: 'parallax',
+                    duration: 3000,
+                    interactionHint: 'Pointez votre caméra vers un QR code'
+                },
+                {
+                    id: 'qr-generate',
+                    illustration: 'QRGenerateDemo',
+                    title: 'Générer un QR Code',
+                    subtitle: 'Recevez des paiements facilement',
+                    animationType: 'slideUp',
+                    duration: 3500,
+                    interactionHint: 'Créez votre QR code personnalisé'
+                },
+                {
+                    id: 'payment-success',
+                    illustration: 'PaymentSuccess',
+                    title: 'Paiement Réussi',
+                    subtitle: 'Transaction confirmée et sécurisée',
+                    animationType: 'scale',
+                    duration: 2500,
+                    interactionHint: 'Célébrez votre succès!'
+                }
+            ]
         },
         {
             id: 'wallet',
@@ -92,6 +161,35 @@ export class OnboardingService {
             animationType: 'scale',
             interactionType: 'swipe',
             duration: 3000,
+            slides: [
+                {
+                    id: 'wallet-overview',
+                    illustration: 'WalletOverview',
+                    title: 'Vue d\'ensemble',
+                    subtitle: 'Gérez votre argent intelligemment',
+                    animationType: 'fadeIn',
+                    duration: 3000,
+                    interactionHint: 'Explorez votre portefeuille'
+                },
+                {
+                    id: 'cash-in-methods',
+                    illustration: 'CashInMethods',
+                    title: 'Méthodes de Rechargement',
+                    subtitle: 'Agents, vouchers, virements bancaires',
+                    animationType: 'parallax',
+                    duration: 3500,
+                    interactionHint: 'Choisissez votre méthode préférée'
+                },
+                {
+                    id: 'transaction-history',
+                    illustration: 'TransactionHistory',
+                    title: 'Historique des Transactions',
+                    subtitle: 'Suivez tous vos paiements',
+                    animationType: 'morphing',
+                    duration: 3000,
+                    interactionHint: 'Consultez votre historique'
+                }
+            ]
         },
         {
             id: 'offline',
@@ -101,6 +199,35 @@ export class OnboardingService {
             animationType: 'custom',
             interactionType: 'tap',
             duration: 2500,
+            slides: [
+                {
+                    id: 'offline-capability',
+                    illustration: 'OfflineCapability',
+                    title: 'Capacités Hors Ligne',
+                    subtitle: 'Payez même sans internet',
+                    animationType: 'slideUp',
+                    duration: 3000,
+                    interactionHint: 'Découvrez la liberté hors ligne'
+                },
+                {
+                    id: 'sync-process',
+                    illustration: 'SyncProcess',
+                    title: 'Synchronisation',
+                    subtitle: 'Vos données se synchronisent automatiquement',
+                    animationType: 'parallax',
+                    duration: 3500,
+                    interactionHint: 'Restez toujours à jour'
+                },
+                {
+                    id: 'security-features',
+                    illustration: 'SecurityFeatures',
+                    title: 'Sécurité Avancée',
+                    subtitle: 'Chiffrement et protection maximale',
+                    animationType: 'morphing',
+                    duration: 4000,
+                    interactionHint: 'Votre sécurité est notre priorité'
+                }
+            ]
         },
     ];
 
@@ -266,10 +393,34 @@ export class OnboardingService {
         try {
             // Pour l'instant, on retourne la configuration par défaut
             // Dans le futur, on pourrait charger depuis un serveur ou un fichier de config
+            console.log('Loading screens config:', this.DEFAULT_SCREENS.map(s => ({ 
+                id: s.id, 
+                title: s.title, 
+                slidesCount: s.slides?.length || 0 
+            })));
             return this.DEFAULT_SCREENS;
         } catch (error) {
             console.warn('Erreur lors du chargement de la configuration des écrans:', error);
             return this.DEFAULT_SCREENS; // Fallback vers la configuration par défaut
+        }
+    }
+
+    /**
+     * Récupère la configuration premium des écrans d'onboarding
+     */
+    static async getPremiumScreensConfig(): Promise<PremiumScreenConfig[]> {
+        try {
+            return defaultPremiumConfig.screens;
+        } catch (error) {
+            console.warn('Erreur lors du chargement de la configuration premium:', error);
+            // Fallback to default screens converted to premium format
+            return this.DEFAULT_SCREENS.map(screen => ({
+                id: screen.id,
+                title: screen.title,
+                slides: screen.slides,
+                transitionType: 'fade' as const,
+                duration: screen.duration
+            }));
         }
     }
 
