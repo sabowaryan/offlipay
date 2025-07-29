@@ -111,12 +111,13 @@ const WelcomeIntro: React.FC<IllustrationProps> = ({
 
   useEffect(() => {
     if (!animated) {
-      logoScale.value = 1;
-      logoOpacity.value = 1;
-      titleOpacity.value = 1;
-      titleTranslateY.value = 0;
-      glassOpacity.value = 1;
-      glassScale.value = 1;
+      // Use runOnJS to avoid reading shared values during render
+      logoScale.value = withTiming(1, { duration: 0 });
+      logoOpacity.value = withTiming(1, { duration: 0 });
+      titleOpacity.value = withTiming(1, { duration: 0 });
+      titleTranslateY.value = withTiming(0, { duration: 0 });
+      glassOpacity.value = withTiming(1, { duration: 0 });
+      glassScale.value = withTiming(1, { duration: 0 });
       return;
     }
 

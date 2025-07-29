@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { secureStorage } from '@/utils/secureStorage/';
 import { defaultPremiumConfig } from '@/components/onboarding/premiumConfig';
 import { PremiumScreenConfig } from '@/components/onboarding/types/PremiumOnboardingConfig';
+import { AnimationType, SlideConfig } from '@/types';
 
 // Types pour l'onboarding - Updated to support slides
 export interface OnboardingScreenConfig {
@@ -9,18 +10,10 @@ export interface OnboardingScreenConfig {
     title: string;
     subtitle: string;
     illustration: string;
-    animationType: 'fadeIn' | 'slideUp' | 'scale' | 'custom';
+    animationType: AnimationType;
     interactionType?: 'tap' | 'swipe' | 'none';
     duration: number;
-    slides: Array<{
-        id: string;
-        illustration: string;
-        title: string;
-        subtitle: string;
-        animationType: 'fadeIn' | 'slideUp' | 'scale' | 'morphing' | 'parallax';
-        duration: number;
-        interactionHint?: string;
-    }>;
+    slides: SlideConfig[];
 }
 
 export interface OnboardingSettings {

@@ -69,7 +69,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         }
       }
     });
-    
+
   // Combine gestures
   const combinedGestures = Gesture.Exclusive(tapGesture, swipeGesture);
 
@@ -161,45 +161,45 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             />
           </Animated.View>
 
-            {/* Text Content */}
-            <View style={styles.textContainer}>
-              <Text
-                style={[styles.title, { color: colors.TEXT }]}
-                accessibilityRole="header"
-                aria-level={1}
-              >
-                {title}
-              </Text>
+          {/* Text Content */}
+          <View style={styles.textContainer}>
+            <Text
+              style={[styles.title, { color: colors.TEXT }]}
+              accessibilityRole="header"
+              aria-level={1}
+            >
+              {title}
+            </Text>
 
+            <Text
+              style={[styles.subtitle, { color: colors.GRAY_MEDIUM }]}
+              accessibilityRole="text"
+            >
+              {subtitle}
+            </Text>
+
+            {/* Interaction Hint */}
+            {interactionHint && (
               <Text
-                style={[styles.subtitle, { color: colors.GRAY_MEDIUM }]}
+                style={[styles.hint, { color: colors.PRIMARY }]}
                 accessibilityRole="text"
+                accessibilityHint="Instruction d'interaction"
               >
-                {subtitle}
+                {interactionHint}
               </Text>
+            )}
+          </View>
 
-              {/* Interaction Hint */}
-              {interactionHint && (
-                <Text
-                  style={[styles.hint, { color: colors.PRIMARY }]}
-                  accessibilityRole="text"
-                  accessibilityHint="Instruction d'interaction"
-                >
-                  {interactionHint}
-                </Text>
-              )}
-            </View>
-
-            {/* Invisible interaction area for better accessibility */}
-            <TouchableOpacity
-              style={styles.accessibilityButton}
-              onPress={onInteraction}
-              accessibilityRole="button"
-              accessibilityLabel={`${title}. ${subtitle}`}
-              accessibilityHint={interactionHint || 'Appuyez pour continuer vers l\'écran suivant'}
-              accessible={true}
-            />
-          </Animated.View>
+          {/* Invisible interaction area for better accessibility */}
+          <TouchableOpacity
+            style={styles.accessibilityButton}
+            onPress={onInteraction}
+            accessibilityRole="button"
+            accessibilityLabel={`${title}. ${subtitle}`}
+            accessibilityHint={interactionHint || 'Appuyez pour continuer vers l\'écran suivant'}
+            accessible={true}
+          />
+        </Animated.View>
       </GestureDetector>
     </GestureHandlerRootView>
   );

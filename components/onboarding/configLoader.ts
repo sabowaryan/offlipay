@@ -1,4 +1,5 @@
-import { OnboardingScreenConfig, OnboardingSettings, OnboardingError, OnboardingErrorCode } from './types';
+import { OnboardingSettings, OnboardingError, OnboardingErrorCode } from './types';
+import { OnboardingScreenConfig } from '@/services/OnboardingService';
 import { DEFAULT_ONBOARDING_SETTINGS, ONBOARDING_SCREENS } from './config';
 import { validateOnboardingConfig } from './configValidator';
 

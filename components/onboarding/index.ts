@@ -7,14 +7,14 @@ export { default as OnboardingButton } from './OnboardingButton';
 // Export premium components
 export { OnboardingSlideCarousel } from './OnboardingSlideCarousel';
 export { default as OnboardingGestureHandler } from './OnboardingGestureHandler';
-export { OnboardingTransitions } from './OnboardingTransitions';
+export { default as OnboardingTransitions } from './OnboardingTransitions';
 
 // Export premium configuration
-export { 
-  defaultPremiumConfig, 
-  responsiveConfig, 
-  PremiumConfigManager, 
-  premiumConfigManager 
+export {
+  defaultPremiumConfig,
+  responsiveConfig,
+  PremiumConfigManager,
+  premiumConfigManager
 } from './premiumConfig';
 
 // Export illustrations

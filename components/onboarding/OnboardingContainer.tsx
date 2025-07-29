@@ -23,8 +23,8 @@ import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { OnboardingService } from '@/services/OnboardingService';
-import { OnboardingContainerProps, OnboardingScreenConfig } from './types';
+import { OnboardingService, OnboardingScreenConfig } from '@/services/OnboardingService';
+import { OnboardingContainerProps } from './types';
 import { OnboardingProgress } from './OnboardingProgress';
 import OnboardingButton from './OnboardingButton';
 import {
@@ -220,12 +220,20 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   // Handle next slide
   const handleNextSlide = useCallback(() => {
     const currentScreenConfig = screens[currentScreen];
-    if (currentScreenConfig && currentSlide < currentScreenConfig.slides.length - 1) {
+    if (!currentScreenConfig) return;
+    
+    if (currentSlide < currentScreenConfig.slides.length - 1) {
       navigateToSlide(currentSlide + 1);
     } else {
-      handleNextScreen(); // Move to next screen if no more slides
+      // Only move to next screen if we're not on the last screen
+      if (currentScreen < screens.length - 1) {
+        handleNextScreen();
+      } else {
+        // We're on the last slide of the last screen, complete onboarding
+        handleComplete();
+      }
     }
-  }, [currentScreen, currentSlide, screens, navigateToSlide, handleNextScreen]);
+  }, [currentScreen, currentSlide, screens, navigateToSlide, handleNextScreen, handleComplete]);
 
   // Handle previous slide
   const handlePreviousSlide = useCallback(() => {
@@ -402,8 +410,9 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
               slides={currentScreenConfig.slides}
               currentSlide={currentSlide}
               onSlideChange={navigateToSlide}
-              autoProgress={true} // Enable auto-progress
-              autoProgressDelay={currentScreenConfig.duration || 3000} // Use screen duration or default
+              onLastSlideReached={handleNextSlide} // Only called when user manually reaches last slide
+              autoProgress={false} // Disable auto-progress - user controls navigation
+              autoProgressDelay={currentScreenConfig.duration || 3000} // Keep for potential future use
               theme={theme}
             />
           </Animated.View>

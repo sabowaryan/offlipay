@@ -1,23 +1,12 @@
 import { ComponentType } from 'react';
 
-// Animation types
-export type AnimationType = 'fadeIn' | 'slideUp' | 'scale' | 'custom';
-export type SlideAnimationType = 'fadeIn' | 'slideUp' | 'scale' | 'morphing' | 'parallax';
+// Animation types are defined in types/index.ts
 export type InteractionType = 'tap' | 'swipe' | 'none';
 export type AnimationSpeed = 'slow' | 'normal' | 'fast';
 export type ProgressIndicatorStyle = 'dots' | 'bar' | 'steps';
 export type ThemeType = 'light' | 'dark' | 'auto';
 
-// Slide configuration
-export interface OnboardingSlide {
-  id: string;
-  illustration: string;
-  title: string;
-  subtitle: string;
-  animationType: SlideAnimationType;
-  duration: number;
-  interactionHint?: string;
-}
+// Slide configuration is defined as SlideConfig in types/index.ts
 
 // Error codes for onboarding
 export enum OnboardingErrorCode {
@@ -27,17 +16,8 @@ export enum OnboardingErrorCode {
   NAVIGATION_ERROR = 'NAV_001',
 }
 
-// Screen configuration
-export interface OnboardingScreenConfig {
-  id: string;
-  title: string;
-  subtitle: string;
-  illustration: string;
-  animationType: AnimationType;
-  interactionType?: InteractionType;
-  duration: number;
-  slides: OnboardingSlide[];
-}
+// Screen configuration - now imported from service to avoid conflicts
+// export interface OnboardingScreenConfig is now defined in services/OnboardingService.ts
 
 // Global onboarding settings
 export interface OnboardingSettings {
@@ -57,7 +37,7 @@ export interface OnboardingContainerProps {
 }
 
 // OnboardingContainer state
-export interface OnboardingState {
+export interface OnboardingContainerState {
   currentScreen: number;
   totalScreens: number;
   isAnimating: boolean;
@@ -78,12 +58,7 @@ export interface OnboardingScreenProps {
   interactionHint?: string;
 }
 
-// OnboardingProgress props
-export interface OnboardingProgressProps {
-  currentStep: number;
-  totalSteps: number;
-  animated?: boolean;
-}
+// OnboardingProgress props are defined in types/index.ts
 
 // OnboardingButton props
 export interface OnboardingButtonProps {

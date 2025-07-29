@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, InteractionManager } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -10,8 +10,8 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
-import * as SplashScreen from 'expo-splash-screen';
 import { StorageService } from '@/utils/storage';
+import * as SplashScreenUtil from '@/utils/splashScreen';
 import * as Sentry from '@sentry/react-native';
 import { QRScannerProvider } from '@/components/QRScannerProvider';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -34,10 +34,11 @@ Sentry.init({
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 // Keep the splash screen visible while we load resources
-SplashScreen.preventAutoHideAsync();
+SplashScreenUtil.preventAutoHideAsync();
 
 export default Sentry.wrap(function RootLayout() {
   useFrameworkReady();
+  const [appIsReady, setAppIsReady] = useState(false);
 
   const [loaded, error] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -47,32 +48,42 @@ export default Sentry.wrap(function RootLayout() {
   });
 
   useEffect(() => {
-    if (loaded || error) {
-      // Hide splash screen once fonts are loaded
-      SplashScreen.hideAsync();
+    async function prepare() {
+      try {
+        // Initialize database
+        await StorageService.initializeDatabase();
+        
+        // Wait for fonts to load
+        if (loaded || error) {
+          setAppIsReady(true);
+        }
+      } catch (e) {
+        console.warn('App preparation failed:', e);
+        setAppIsReady(true); // Continue anyway
+      }
     }
+
+    prepare();
   }, [loaded, error]);
 
   useEffect(() => {
-    // Initialize database asynchronously without blocking render
-    const initDB = async () => {
-      try {
-        await StorageService.initializeDatabase();
-      } catch (error) {
-        console.error('Database initialization failed:', error);
-      }
-    };
-    
-    // Use InteractionManager to defer heavy operations
-    const task = InteractionManager.runAfterInteractions(initDB);
-    return () => task.cancel();
-  }, []);
+    if (appIsReady) {
+      // Hide splash screen once app is ready
+      const hideSplash = () => {
+        SplashScreenUtil.hideAsync();
+      };
+      
+      // Use a small delay to ensure smooth transition
+      const timer = setTimeout(hideSplash, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [appIsReady]);
 
-  // Show loading state immediately instead of null
-  if (!loaded && !error) {
+  // Show loading state while app is preparing
+  if (!appIsReady) {
     return (
       <View style={{ flex: 1, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' }}>
-        {/* Minimal loading indicator */}
+        {/* Minimal loading indicator - splash screen will be visible */}
       </View>
     );
   }

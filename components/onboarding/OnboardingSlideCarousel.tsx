@@ -16,13 +16,15 @@ import Animated, {
   runOnJS,
   cancelAnimation,
 } from 'react-native-reanimated';
-import { OnboardingSlide, IllustrationProps } from './types';
+import { IllustrationProps } from './types';
+import { SlideConfig } from '@/types';
 
 // Props interface for the carousel
 interface OnboardingSlideCarouselProps {
-  slides: OnboardingSlide[];
+  slides: SlideConfig[];
   currentSlide: number;
   onSlideChange: (index: number) => void;
+  onLastSlideReached?: () => void; // New callback for when last slide is reached
   autoProgress?: boolean;
   autoProgressDelay?: number;
   theme: 'light' | 'dark';
@@ -38,6 +40,7 @@ export const OnboardingSlideCarousel: React.FC<OnboardingSlideCarouselProps> = (
   slides,
   currentSlide,
   onSlideChange,
+  onLastSlideReached,
   autoProgress = true,
   autoProgressDelay = 3000,
   theme
@@ -46,7 +49,7 @@ export const OnboardingSlideCarousel: React.FC<OnboardingSlideCarouselProps> = (
   const autoProgressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isGestureActive, setIsGestureActive] = useState(false);
 
-  // Auto-progression logic
+  // Auto-progression logic - disabled to give user control
   const stopAutoProgress = useCallback(() => {
     if (autoProgressTimer.current) {
       clearTimeout(autoProgressTimer.current);
@@ -54,19 +57,12 @@ export const OnboardingSlideCarousel: React.FC<OnboardingSlideCarouselProps> = (
     }
   }, []);
 
-  // Reset auto-progress when slide changes
+  // Auto-progress is now disabled - user must manually navigate
   useEffect(() => {
     stopAutoProgress();
-    
-    if (!isGestureActive && autoProgress && slides.length > 1) {
-      autoProgressTimer.current = setTimeout(() => {
-        const nextSlide = (currentSlide + 1) % slides.length;
-        onSlideChange(nextSlide);
-      }, autoProgressDelay);
-    }
-    
+    // Auto-progression is disabled - slides will loop infinitely until user takes action
     return stopAutoProgress;
-  }, [currentSlide, isGestureActive, autoProgress, autoProgressDelay, slides.length, onSlideChange, stopAutoProgress]);
+  }, [stopAutoProgress]);
 
   // Animate to current slide
   useEffect(() => {
@@ -155,7 +151,7 @@ export const OnboardingSlideCarousel: React.FC<OnboardingSlideCarouselProps> = (
   };
 
   // Render individual slide - simplified without complex animations
-  const renderSlide = (slide: OnboardingSlide, index: number) => {
+  const renderSlide = (slide: SlideConfig, index: number) => {
     const IllustrationComponent = getIllustrationComponent(slide.illustration);
     const isCurrentSlide = index === currentSlide;
 
@@ -164,7 +160,7 @@ export const OnboardingSlideCarousel: React.FC<OnboardingSlideCarouselProps> = (
         key={slide.id}
         style={[
           styles.slide,
-          { 
+          {
             backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
             top: index * SLIDE_HEIGHT,
           }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -35,40 +35,13 @@ const QRScanDemo: React.FC<IllustrationProps> = ({
   };
 
   useEffect(() => {
-    if (!animated) return;
-
-    const startAnimation = () => {
-      // Phone entrance animation
-      phoneRotation.value = withTiming(0, { duration: 800 });
-
-      // QR code appears
-      qrOpacity.value = withTiming(1, { duration: 600 });
-
-      // Scan line animation
-      setTimeout(() => {
-        scanLineY.value = withRepeat(
-          withSequence(
-            withTiming(1, { duration: 1500 }),
-            withTiming(0, { duration: 1500 })
-          ),
-          2,
-          false,
-          () => {
-            // Success animation
-            runOnJS(() => {
-              successScale.value = withSequence(
-                withTiming(1.2, { duration: 300 }),
-                withTiming(1, { duration: 200 })
-              );
-
-              setTimeout(() => {
-                onAnimationComplete?.();
-              }, 500);
-            })();
-          }
-        );
-      }, 800);
-    };
+    if (!animated) {
+      phoneRotation.value = 0;
+      qrOpacity.value = 1;
+      successScale.value = 1;
+      onAnimationComplete?.();
+      return;
+    }
 
     // Initial setup
     phoneRotation.value = -15;
@@ -76,7 +49,49 @@ const QRScanDemo: React.FC<IllustrationProps> = ({
     qrOpacity.value = 0;
     successScale.value = 0;
 
-    startAnimation();
+    // Phone entrance animation
+    phoneRotation.value = withTiming(0, { duration: 800 });
+
+    // QR code appears
+    qrOpacity.value = withTiming(1, { duration: 600 });
+
+    // Scan line animation with cleanup
+    const scanTimer = setTimeout(() => {
+      scanLineY.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 1500 }),
+          withTiming(0, { duration: 1500 })
+        ),
+        2,
+        false
+      );
+
+      // Success animation after scan completes
+      const successTimer = setTimeout(() => {
+        successScale.value = withSequence(
+          withTiming(1.2, { duration: 300 }),
+          withTiming(1, { duration: 200 })
+        );
+
+        const completeTimer = setTimeout(() => {
+          onAnimationComplete?.();
+        }, 500);
+
+        return () => clearTimeout(completeTimer);
+      }, 6000); // 2 scan cycles * 3000ms each
+
+      return () => clearTimeout(successTimer);
+    }, 800);
+
+    // Cleanup function
+    return () => {
+      clearTimeout(scanTimer);
+      // Reset animation values
+      phoneRotation.value = 0;
+      scanLineY.value = 0;
+      qrOpacity.value = 0;
+      successScale.value = 0;
+    };
   }, [animated, onAnimationComplete]);
 
   const phoneAnimatedStyle = useAnimatedStyle(() => ({

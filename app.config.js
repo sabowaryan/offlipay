@@ -45,6 +45,11 @@ export default ({ config }) => ({
     output: 'single',
     favicon: './assets/images/AppIcons/Assets.xcassets/AppIcon.appiconset/1024.png',
   },
+  splash: {
+    image: './assets/images/AppIcons/1024.png',
+    resizeMode: 'contain',
+    backgroundColor: '#ffffff',
+  },
   plugins: [
     'expo-router',
     'expo-font',

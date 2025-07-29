@@ -123,7 +123,7 @@ export interface CashInQRData {
 }
 
 // Types pour l'onboarding premium multi-slides
-export type AnimationType = 'fadeIn' | 'slideUp' | 'scale' | 'morphing' | 'parallax';
+export type AnimationType = 'fadeIn' | 'slideUp' | 'scale' | 'morphing' | 'parallax' | 'custom';
 export type TransitionType = 'slide' | 'fade' | 'scale' | 'flip' | 'cube';
 export type EasingType = 'ease' | 'easeIn' | 'easeOut' | 'easeInOut' | 'spring';
 export type ProgressStyle = 'dots' | 'bars' | 'circular' | 'minimal';
