@@ -115,7 +115,7 @@ examples/
 ### Installation
 ```bash
 # Cloner le repository
-git clone https://github.com/votre-username/offlipay.git
+git clone https://github.com/sabowaryan/offlipay.git
 cd offlipay
 
 # Installer les dépendances
@@ -215,16 +215,22 @@ npm run build:web
 
 ## 📚 Documentation
 
-### Guides
-- [Guide d'installation](docs/Installation.md)
-- [Architecture](docs/Architecture.md)
-- [API Reference](docs/API.md)
-- [Tests](docs/Tests.md)
+### 📖 Guides
+- [Guide d'installation](docs/Installation.md) - Installation complète et configuration
+- [Architecture](docs/Architecture.md) - Structure et patterns architecturaux
+- [API Reference](docs/API.md) - Documentation complète de l'API interne
+- [Tests](docs/Tests.md) - Stratégie de test et exemples
 
-### Composants
-- [CashInModal](docs/CashInModal.md)
-- [Composants UI](docs/UIComponents.md)
-- [Hooks](docs/Hooks.md)
+### 🧩 Composants
+- [CashInModal](docs/CashInModal.md) - Modal d'ajout de fonds (documentation complète)
+- [Composants UI](docs/UIComponents.md) - Bibliothèque de composants réutilisables
+- [Hooks](docs/Hooks.md) - Hooks personnalisés pour la logique métier
+
+### 🚀 Démarrage rapide
+1. **Installation** : Suivez le [guide d'installation](docs/Installation.md)
+2. **Architecture** : Comprenez la [structure du projet](docs/Architecture.md)
+3. **Développement** : Consultez l'[API reference](docs/API.md) et les [composants UI](docs/UIComponents.md)
+4. **Tests** : Implémentez des tests avec le [guide de test](docs/Tests.md)
 
 ## 🤝 Contribution
 
@@ -240,10 +246,10 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 ## 🆘 Support
 
-- **Issues** : [GitHub Issues](https://github.com/votre-username/offlipay/issues)
-- **Documentation** : [Wiki](https://github.com/votre-username/offlipay/wiki)
-- **Discussions** : [GitHub Discussions](https://github.com/votre-username/offlipay/discussions)
+- **Issues** : [GitHub Issues](https://github.com/sabowaryan/offlipay/issues)
+- **Documentation** : [Wiki](https://github.com/sabowaryan/offlipay/wiki)
+- **Discussions** : [GitHub Discussions](https://github.com/sabowaryan/offlipay/discussions)
 
----
 
-Développé avec ❤️ par l'équipe OffliPay 
+
+Développé  par l'équipe OffliPay 

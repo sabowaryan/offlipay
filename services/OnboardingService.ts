@@ -62,7 +62,7 @@ export class OnboardingError extends Error {
 
 export class OnboardingService {
     static hasCompletedOnboarding() {
-      throw new Error('Method not implemented.');
+        throw new Error('Method not implemented.');
     }
     private static readonly ONBOARDING_STATE_KEY = 'onboarding_state';
     private static readonly ONBOARDING_PREFERENCES_KEY = 'onboarding_preferences';
@@ -386,10 +386,10 @@ export class OnboardingService {
         try {
             // Pour l'instant, on retourne la configuration par défaut
             // Dans le futur, on pourrait charger depuis un serveur ou un fichier de config
-            console.log('Loading screens config:', this.DEFAULT_SCREENS.map(s => ({ 
-                id: s.id, 
-                title: s.title, 
-                slidesCount: s.slides?.length || 0 
+            console.log('Loading screens config:', this.DEFAULT_SCREENS.map(s => ({
+                id: s.id,
+                title: s.title,
+                slidesCount: s.slides?.length || 0
             })));
             return this.DEFAULT_SCREENS;
         } catch (error) {
@@ -410,7 +410,11 @@ export class OnboardingService {
             return this.DEFAULT_SCREENS.map(screen => ({
                 id: screen.id,
                 title: screen.title,
-                slides: screen.slides,
+                slides: screen.slides.map(slide => ({
+                    ...slide,
+                    // Map unsupported animation types to supported ones
+                    animationType: slide.animationType === 'custom' ? 'fadeIn' : slide.animationType
+                })),
                 transitionType: 'fade' as const,
                 duration: screen.duration
             }));
