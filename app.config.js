@@ -52,6 +52,8 @@ export default ({ config }) => ({
   },
   plugins: [
     'expo-router',
+    'expo-sqlite',
+    'expo-secure-store',
     'expo-font',
     'expo-web-browser',
     [

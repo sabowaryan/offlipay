@@ -1,11 +1,10 @@
-import React from 'react';
 import { render, act, waitFor } from '@testing-library/react-native';
 import { Dimensions, Platform } from 'react-native';
 import OnboardingContainer from '@/components/onboarding/OnboardingContainer';
 import { OnboardingPerformanceMonitor } from '@/components/onboarding/utils/performanceMonitor';
-import { 
+import {
   detectDevicePerformance,
-  getOptimizedAnimationConfig 
+  getOptimizedAnimationConfig
 } from '@/components/onboarding/utils/performanceOptimization';
 
 // Mock dependencies
@@ -25,7 +24,7 @@ jest.mock('@/hooks/useThemeColors', () => ({
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');
-  Reanimated.default.call = () => {};
+  Reanimated.default.call = () => { };
   return Reanimated;
 });
 
@@ -136,7 +135,7 @@ describe('Onboarding Performance Validation', () => {
         });
 
         const startTime = Date.now();
-        
+
         const { unmount } = render(
           <OnboardingContainer
             onComplete={jest.fn()}
@@ -158,9 +157,9 @@ describe('Onboarding Performance Validation', () => {
   describe('Load Time Performance Validation', () => {
     it('should meet the 2-second load time requirement', async () => {
       performanceMonitor.startMonitoring();
-      
+
       const startTime = Date.now();
-      
+
       const { unmount } = render(
         <OnboardingContainer
           onComplete={jest.fn()}
@@ -174,10 +173,10 @@ describe('Onboarding Performance Validation', () => {
       });
 
       const loadTime = Date.now() - startTime;
-      
+
       // Must meet the 2-second requirement from specifications
       expect(loadTime).toBeLessThan(2000);
-      
+
       const metrics = performanceMonitor.getCurrentMetrics();
       expect(metrics.loadTime).toBeLessThan(2000);
 
@@ -192,7 +191,7 @@ describe('Onboarding Performance Validation', () => {
 
     it('should load critical content first (progressive loading)', async () => {
       const loadStages: string[] = [];
-      
+
       // Mock service to track loading stages
       const mockService = require('@/services/OnboardingService');
       mockService.OnboardingService.getScreensConfig.mockImplementation(async () => {
@@ -241,26 +240,26 @@ describe('Onboarding Performance Validation', () => {
   describe('Frame Rate and Animation Performance', () => {
     it('should maintain target frame rates during animations', () => {
       performanceMonitor.startMonitoring();
-      
+
       const targetFPS = 60;
       const testDuration = 1000; // 1 second
       const frameInterval = 1000 / targetFPS;
-      
+
       // Simulate animation frames
       let frameCount = 0;
       const startTime = Date.now();
-      
+
       while (Date.now() - startTime < testDuration) {
         performanceMonitor.recordFrame();
         frameCount++;
-        
+
         // Advance time by one frame
         jest.advanceTimersByTime(frameInterval);
       }
-      
+
       const metrics = performanceMonitor.getCurrentMetrics();
       const frameDropPercentage = (metrics.frameDrops / frameCount) * 100;
-      
+
       // Should maintain reasonable frame rate
       expect(frameDropPercentage).toBeLessThan(10); // < 10% frame drops
       expect(metrics.frameDrops).toBeLessThan(frameCount * 0.1);
@@ -275,19 +274,19 @@ describe('Onboarding Performance Validation', () => {
 
     it('should adapt animation complexity based on performance', () => {
       performanceMonitor.startMonitoring();
-      
+
       // Simulate poor performance
       for (let i = 0; i < 20; i++) {
         jest.advanceTimersByTime(50); // Simulate slow frames
         performanceMonitor.recordFrame();
       }
-      
+
       const isDegraded = performanceMonitor.isPerformanceDegraded();
       const recommendations = performanceMonitor.getPerformanceRecommendations();
-      
+
       expect(isDegraded).toBe(true);
       expect(recommendations).toContain('Reduce animation complexity');
-      
+
       console.log('Performance adaptation:', {
         isDegraded,
         recommendations,
@@ -299,7 +298,7 @@ describe('Onboarding Performance Validation', () => {
     it('should not exceed memory thresholds', () => {
       const components: any[] = [];
       const maxComponents = 10;
-      
+
       // Create multiple components to test memory usage
       for (let i = 0; i < maxComponents; i++) {
         const component = render(
@@ -310,14 +309,14 @@ describe('Onboarding Performance Validation', () => {
         );
         components.push(component);
       }
-      
+
       // Memory usage should be reasonable
       const metrics = performanceMonitor.getCurrentMetrics();
       expect(metrics.memoryUsage).toBeLessThan(100); // < 100MB
-      
+
       // Cleanup
       components.forEach(component => component.unmount());
-      
+
       console.log('Memory usage test:', {
         componentsCreated: maxComponents,
         memoryUsage: metrics.memoryUsage,
@@ -326,18 +325,18 @@ describe('Onboarding Performance Validation', () => {
 
     it('should clean up resources properly', () => {
       const initialMetrics = performanceMonitor.getCurrentMetrics();
-      
+
       const { unmount } = render(
         <OnboardingContainer
           onComplete={jest.fn()}
           onSkip={jest.fn()}
         />
       );
-      
+
       unmount();
-      
+
       const finalMetrics = performanceMonitor.getCurrentMetrics();
-      
+
       // Memory should not increase significantly after cleanup
       expect(finalMetrics.memoryUsage).toBeLessThanOrEqual(initialMetrics.memoryUsage + 10);
     });
@@ -362,7 +361,7 @@ describe('Onboarding Performance Validation', () => {
       });
 
       const startTime = Date.now();
-      
+
       render(
         <OnboardingContainer
           onComplete={jest.fn()}
@@ -401,7 +400,7 @@ describe('Onboarding Performance Validation', () => {
     it('should retry failed requests with exponential backoff', async () => {
       let attemptCount = 0;
       const mockService = require('@/services/OnboardingService');
-      
+
       mockService.OnboardingService.getScreensConfig.mockImplementation(async () => {
         attemptCount++;
         if (attemptCount < 3) {
@@ -435,7 +434,7 @@ describe('Onboarding Performance Validation', () => {
   describe('Interaction Performance', () => {
     it('should respond to interactions within acceptable latency', () => {
       performanceMonitor.startMonitoring();
-      
+
       const { getByTestId } = render(
         <OnboardingContainer
           onComplete={jest.fn()}
@@ -445,21 +444,21 @@ describe('Onboarding Performance Validation', () => {
 
       // Simulate user interaction
       const interactionStart = Date.now();
-      
+
       // Mock interaction
       act(() => {
         // Simulate tap or swipe
         jest.advanceTimersByTime(50);
       });
-      
+
       const interactionTime = Date.now() - interactionStart;
       performanceMonitor.recordInteraction(interactionTime);
-      
+
       const metrics = performanceMonitor.getCurrentMetrics();
-      
+
       // Interaction latency should be low
       expect(metrics.interactionLatency).toBeLessThan(100); // < 100ms
-      
+
       console.log('Interaction performance:', {
         latency: metrics.interactionLatency,
         requirement: '< 100ms',
@@ -470,24 +469,24 @@ describe('Onboarding Performance Validation', () => {
   describe('Performance Degradation Handling', () => {
     it('should detect and respond to performance degradation', () => {
       performanceMonitor.startMonitoring();
-      
+
       let degradationDetected = false;
       performanceMonitor.onPerformanceDegradation(() => {
         degradationDetected = true;
       });
-      
+
       // Simulate performance issues
       for (let i = 0; i < 15; i++) {
         jest.advanceTimersByTime(100); // Slow frames
         performanceMonitor.recordFrame();
       }
-      
+
       expect(degradationDetected).toBe(true);
       expect(performanceMonitor.isPerformanceDegraded()).toBe(true);
-      
+
       const recommendations = performanceMonitor.getPerformanceRecommendations();
       expect(recommendations.length).toBeGreaterThan(0);
-      
+
       console.log('Performance degradation handling:', {
         degradationDetected,
         recommendations,
@@ -496,18 +495,18 @@ describe('Onboarding Performance Validation', () => {
 
     it('should provide actionable performance recommendations', () => {
       performanceMonitor.startMonitoring();
-      
+
       // Simulate various performance issues
       performanceMonitor.recordLoadTime('slow-operation', 3000);
       performanceMonitor.recordInteraction(200);
       performanceMonitor.recordAnimationCompletion(false);
-      
+
       const recommendations = performanceMonitor.getPerformanceRecommendations();
-      
+
       expect(recommendations).toContain('Enable asset preloading');
       expect(recommendations).toContain('Reduce UI complexity');
       expect(recommendations).toContain('Switch to simplified animations');
-      
+
       console.log('Performance recommendations:', recommendations);
     });
   });
@@ -515,7 +514,7 @@ describe('Onboarding Performance Validation', () => {
   describe('Comprehensive Performance Report', () => {
     it('should generate comprehensive performance metrics', async () => {
       performanceMonitor.startMonitoring();
-      
+
       // Simulate full onboarding usage
       const { unmount } = render(
         <OnboardingContainer
@@ -529,19 +528,19 @@ describe('Onboarding Performance Validation', () => {
         jest.advanceTimersByTime(16); // 60fps
         performanceMonitor.recordFrame();
       }
-      
+
       performanceMonitor.recordLoadTime('full-load', 1500);
       performanceMonitor.recordInteraction(50);
       performanceMonitor.recordAnimationCompletion(true);
-      
+
       const finalMetrics = performanceMonitor.stopMonitoring();
-      
+
       // Validate all key metrics
       expect(finalMetrics.loadTime).toBeLessThan(2000);
       expect(finalMetrics.interactionLatency).toBeLessThan(100);
       expect(finalMetrics.animationCompletionRate).toBeGreaterThan(80);
       expect(finalMetrics.frameDrops).toBeLessThan(5);
-      
+
       console.log('Comprehensive Performance Report:', {
         loadTime: `${finalMetrics.loadTime}ms (requirement: < 2000ms)`,
         interactionLatency: `${finalMetrics.interactionLatency}ms (requirement: < 100ms)`,
@@ -550,7 +549,7 @@ describe('Onboarding Performance Validation', () => {
         averageFrameTime: `${finalMetrics.averageFrameTime}ms`,
         memoryUsage: `${finalMetrics.memoryUsage}MB`,
       });
-      
+
       unmount();
     });
   });

@@ -16,6 +16,17 @@ export enum OnboardingErrorCode {
   NAVIGATION_ERROR = 'NAV_001',
 }
 
+// Slide configuration for premium onboarding
+export interface OnboardingSlideConfig {
+  id: string;
+  title: string;
+  subtitle: string;
+  content?: string;
+  animationType?: AnimationType;
+  illustration: string;
+  duration: number;
+}
+
 // Screen configuration - now imported from service to avoid conflicts
 // export interface OnboardingScreenConfig is now defined in services/OnboardingService.ts
 
