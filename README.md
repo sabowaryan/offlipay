@@ -1,148 +1,148 @@
-# OffliPay - Application de Paiement Mobile
+# OffliPay - Mobile Payment Application
 
-Une application React Native moderne pour les paiements mobiles avec support hors ligne, QR codes et gestion de portefeuille.
+A modern React Native application for mobile payments with offline support, QR codes, and wallet management.
 
-## 🚀 Fonctionnalités
+## 🚀 Features
 
 ### Core
-- **Paiements QR** : Génération et scan de QR codes pour les transactions
-- **Portefeuille sécurisé** : Gestion des soldes et transactions
-- **Mode hors ligne** : Fonctionnement complet sans connexion internet
-- **Thème adaptatif** : Support des modes clair/sombre/auto
-- **Interface responsive** : Optimisée pour mobile et tablette
+- **QR Payments**: Generate and scan QR codes for transactions
+- **Secure Wallet**: Manage balances and transactions
+- **Offline Mode**: Fully functional without internet connection
+- **Adaptive Theme**: Light/dark/auto mode support
+- **Responsive Interface**: Optimized for mobile and tablet
 
-### Cash-In (Ajout de fonds)
-- **Agents** : Paiement via réseau d'agents physiques
-- **Vouchers prépayés** : Codes QR pour recharges
-- **Intégration bancaire** : Transferts bancaires directs
-- **Calcul automatique des frais** : Selon la méthode choisie
-- **Validation en temps réel** : Contrôles de sécurité
+### Cash-In (Add Funds)
+- **Agents**: Pay via a network of physical agents
+- **Prepaid Vouchers**: QR codes for top-ups
+- **Bank Integration**: Direct bank transfers
+- **Automatic Fee Calculation**: Based on chosen method
+- **Real-Time Validation**: Security checks
 
 ### Transactions
-- **Historique complet** : Toutes les transactions avec filtres
-- **Détails enrichis** : Informations détaillées par transaction
-- **Partage** : Export et partage des relevés
-- **Recherche** : Recherche par description ou ID
-- **Statistiques** : Totaux envoyés/reçus
+- **Full History**: All transactions with filters
+- **Detailed Info**: Rich information per transaction
+- **Sharing**: Export and share statements
+- **Search**: Search by description or ID
+- **Statistics**: Totals sent/received
 
 ## 🏗️ Architecture
 
-### Structure des composants
+### Component Structure
 ```
 components/
-├── ui/                    # Composants UI réutilisables
+├── ui/                    # Reusable UI components
 │   ├── ModalContainer.tsx
 │   ├── SectionCard.tsx
 │   ├── AmountInput.tsx
 │   ├── SelectionCard.tsx
 │   └── ActionButton.tsx
-├── cash-in/              # Composants spécifiques cash-in
+├── cash-in/               # Cash-in specific components
 │   ├── MethodSelector.tsx
 │   ├── AgentList.tsx
 │   ├── VoucherInput.tsx
 │   └── BankAccountList.tsx
-└── [autres composants]
+└── [other components]
 ```
 
-### Hooks personnalisés
+### Custom Hooks
 ```
 hooks/
-├── useCashInValidation.ts    # Validation des formulaires cash-in
-├── useCashInFees.ts          # Calcul des frais
-├── useCustomAlert.ts         # Gestion des alertes
-├── useThemeColors.ts         # Gestion du thème
-└── useUserMode.ts           # Mode utilisateur (acheteur/vendeur)
+├── useCashInValidation.ts    # Cash-in form validation
+├── useCashInFees.ts          # Fee calculation
+├── useCustomAlert.ts         # Alert management
+├── useThemeColors.ts         # Theme handling
+└── useUserMode.ts            # User mode (buyer/seller)
 ```
 
 ### Services
 ```
 services/
-├── CashInService.ts          # Logique métier cash-in
-├── WalletService.ts          # Gestion du portefeuille
-└── [autres services]
+├── CashInService.ts          # Cash-in business logic
+├── WalletService.ts          # Wallet management
+└── [other services]
 ```
 
-## 🧪 Tests
+## 🧪 Testing
 
-### Tests unitaires
+### Unit Tests
 ```bash
-# Lancer tous les tests
+# Run all tests
 npm test
 
-# Tests avec couverture
+# Tests with coverage
 npm run test:coverage
 
-# Tests en mode watch
+# Tests in watch mode
 npm run test:watch
 ```
 
-### Structure des tests
+### Test Structure
 ```
 __tests__/
 ├── components/
 │   ├── ui/
 │   │   ├── ModalContainer.test.tsx
 │   │   ├── AmountInput.test.tsx
-│   │   └── [autres tests composants]
-│   └── [tests autres composants]
+│   │   └── [other component tests]
+│   └── [other component tests]
 ├── hooks/
 │   ├── useCashInValidation.test.ts
 │   ├── useCashInFees.test.ts
-│   └── [autres tests hooks]
+│   └── [other hook tests]
 └── services/
     ├── CashInService.test.ts
     ├── WalletService.test.ts
-    └── [autres tests services]
+    └── [other service tests]
 ```
 
-### Exemples d'utilisation
+### Usage Examples
 ```
 examples/
-├── CashInModalExample.tsx    # Exemple d'utilisation du modal cash-in
-├── ComponentExamples.tsx     # Démonstration des composants UI
-└── HookExamples.tsx          # Exemples d'utilisation des hooks
+├── CashInModalExample.tsx    # Example of cash-in modal usage
+├── ComponentExamples.tsx     # UI component showcase
+└── HookExamples.tsx          # Hook usage examples
 ```
 
 ## 📱 Installation
 
-### Prérequis
+### Prerequisites
 - Node.js 18+
-- npm ou yarn
+- npm or yarn
 - Expo CLI
-- Android Studio (pour Android)
-- Xcode (pour iOS, macOS uniquement)
+- Android Studio (for Android)
+- Xcode (for iOS, macOS only)
 
 ### Installation
 ```bash
-# Cloner le repository
+# Clone the repository
 git clone https://github.com/sabowaryan/offlipay.git
 cd offlipay
 
-# Installer les dépendances
+# Install dependencies
 npm install
 
-# Démarrer l'application
+# Start the application
 npm start
 ```
 
 ### Configuration
-1. Copier `.env.example` vers `.env`
-2. Configurer les variables d'environnement
-3. Configurer les clés API si nécessaire
+1. Copy `.env.example` to `.env`
+2. Set up environment variables
+3. Add API keys if needed
 
-## 🗄️ Base de données
+## 🗄️ Database
 
-### Tables principales
-- **users** : Utilisateurs et portefeuilles
-- **transactions** : Historique des transactions
-- **balances** : Soldes utilisateurs (nouvelle table)
-- **cash_in_transactions** : Transactions d'ajout de fonds
-- **agents** : Réseau d'agents
-- **vouchers** : Codes prépayés
-- **bank_accounts** : Comptes bancaires
+### Main Tables
+- **users**: Users and wallets
+- **transactions**: Transaction history
+- **balances**: User balances (new table)
+- **cash_in_transactions**: Cash-in transactions
+- **agents**: Agent network
+- **vouchers**: Prepaid codes
+- **bank_accounts**: Bank accounts
 
-### Migration vers la table balances
-La nouvelle table `balances` permet une gestion plus fine des soldes :
+### Migration to balances table
+The new `balances` table enables more granular balance management:
 ```sql
 CREATE TABLE balances (
   user_id TEXT PRIMARY KEY,
@@ -153,39 +153,39 @@ CREATE TABLE balances (
 );
 ```
 
-## 🔧 Développement
+## 🔧 Development
 
-### Scripts disponibles
+### Available Scripts
 ```bash
-npm start          # Démarrer l'application
-npm run android    # Lancer sur Android
-npm run ios        # Lancer sur iOS
-npm run web        # Lancer sur web
-npm test           # Lancer les tests
-npm run lint       # Vérifier le code
-npm run type-check # Vérifier les types TypeScript
+npm start          # Start the application
+npm run android    # Run on Android
+npm run ios        # Run on iOS
+npm run web        # Run on web
+npm test           # Run tests
+npm run lint       # Lint code
+npm run type-check # TypeScript type check
 ```
 
-### Conventions de code
-- **TypeScript** : Utilisation stricte des types
-- **ESLint** : Règles de code automatiques
-- **Prettier** : Formatage automatique
-- **Husky** : Hooks Git pour la qualité
+### Code Conventions
+- **TypeScript**: Strict type usage
+- **ESLint**: Automatic code rules
+- **Prettier**: Auto formatting
+- **Husky**: Git hooks for quality
 
-### Structure des commits
+### Commit Structure
 ```
-feat: nouvelle fonctionnalité
-fix: correction de bug
+feat: new feature
+fix: bug fix
 docs: documentation
-style: formatage
-refactor: refactorisation
-test: ajout/modification de tests
-chore: tâches de maintenance
+style: formatting
+refactor: refactoring
+test: add/modify tests
+chore: maintenance tasks
 ```
 
-## 🚀 Déploiement
+## 🚀 Deployment
 
-### Build de production
+### Production Build
 ```bash
 # Android
 eas build --platform android
@@ -197,7 +197,7 @@ eas build --platform ios
 npm run build:web
 ```
 
-### Configuration EAS
+### EAS Configuration
 ```json
 {
   "build": {
@@ -216,40 +216,38 @@ npm run build:web
 ## 📚 Documentation
 
 ### 📖 Guides
-- [Guide d'installation](docs/Installation.md) - Installation complète et configuration
-- [Architecture](docs/Architecture.md) - Structure et patterns architecturaux
-- [API Reference](docs/API.md) - Documentation complète de l'API interne
-- [Tests](docs/Tests.md) - Stratégie de test et exemples
+- [Installation Guide](docs/Installation.md) - Full installation and setup
+- [Architecture](docs/Architecture.md) - Structure and architectural patterns
+- [API Reference](docs/API.md) - Full internal API documentation
+- [Tests](docs/Tests.md) - Testing strategy and examples
 
-### 🧩 Composants
-- [CashInModal](docs/CashInModal.md) - Modal d'ajout de fonds (documentation complète)
-- [Composants UI](docs/UIComponents.md) - Bibliothèque de composants réutilisables
-- [Hooks](docs/Hooks.md) - Hooks personnalisés pour la logique métier
+### 🧩 Components
+- [CashInModal](docs/CashInModal.md) - Full documentation for cash-in modal
+- [UI Components](docs/UIComponents.md) - Reusable components library
+- [Hooks](docs/Hooks.md) - Custom hooks for business logic
 
-### 🚀 Démarrage rapide
-1. **Installation** : Suivez le [guide d'installation](docs/Installation.md)
-2. **Architecture** : Comprenez la [structure du projet](docs/Architecture.md)
-3. **Développement** : Consultez l'[API reference](docs/API.md) et les [composants UI](docs/UIComponents.md)
-4. **Tests** : Implémentez des tests avec le [guide de test](docs/Tests.md)
+### 🚀 Quick Start
+1. **Installation**: Follow the [installation guide](docs/Installation.md)
+2. **Architecture**: Understand the [project structure](docs/Architecture.md)
+3. **Development**: See [API reference](docs/API.md) and [UI components](docs/UIComponents.md)
+4. **Tests**: Add tests using the [testing guide](docs/Tests.md)
 
 ## 🤝 Contribution
 
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📄 Licence
+## 📄 License
 
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+This project is MIT licensed. See the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
-- **Issues** : [GitHub Issues](https://github.com/sabowaryan/offlipay/issues)
-- **Documentation** : [Wiki](https://github.com/sabowaryan/offlipay/wiki)
-- **Discussions** : [GitHub Discussions](https://github.com/sabowaryan/offlipay/discussions)
+- **Issues**: [GitHub Issues](https://github.com/sabowaryan/offlipay/issues)
+- **Documentation**: [Wiki](https://github.com/sabowaryan/offlipay/wiki)
+- **Discussions**: [GitHub Discussions](https://github.com/sabowaryan/offlipay/discussions)
 
-
-
-Développé  par l'équipe OffliPay 
+Developed by the OffliPay team
